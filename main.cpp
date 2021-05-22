@@ -36,12 +36,6 @@ public:
 
     ~NetworkComponent();
 
-    // TCP
-    // int sendFile(const struct& Resource res);
-    // int receiveFile();
-    // UDP - napisze ja (debil znajde cię)
-    // int broadcast(const struct& ProtoPacket pack)
-
 private:
 };
 
@@ -80,21 +74,20 @@ void safeOutput(const std::string &str) {
     m.unlock();
 }
 
-char* safeInput(char* command) {
+char *safeInput(char *command) {
     m.lock();
     std::cin.getline(command, MAX_COMMAND_LENGTH);
     m.unlock();
     return command;
 }
 
-void splitCommandOnSpace(const std::string& s, std::vector<std::string>& v) {
+void splitCommandOnSpace(const std::string &s, std::vector<std::string> &v) {
     std::string temp;
-    for(char i : s){
-        if(i==' '){
+    for (char i : s) {
+        if (i == ' ') {
             v.push_back(temp);
             temp = "";
-        }
-        else{
+        } else {
             temp.push_back(i);
         }
     }
@@ -114,15 +107,13 @@ int parseCommand(char *command) {
     return -1;
 }
 
-void independentThread()
-{
+void independentThread() {
     safeOutput("Start thread");
     std::this_thread::sleep_for(std::chrono::seconds(5));
     safeOutput("Exit thread");
 }
 
-void threadCaller()
-{
+void threadCaller() {
     std::thread t(independentThread);
     t.detach();
 }
@@ -152,17 +143,5 @@ int main(int argc, char *argv[]) {
                 break;
         }
     }
-
-    /* podział prac
-    Waldek - UDP
-    Konrad - FileHandler - stworzenie zasobu, usunięcie go, przechowywanie w koneterze, zwrócenie wszystkich,
-    Michał - main.cpp / fredy - spawnowanie
-    Ja :D  - TCP send/recv 
-
-    todo cmake/make na ./include ./src
-    deadline 22.05
-    pisanie funkcji, tak, żeby dało się je wykorzystywać na wyższym poziomie (parent-module) essa
-    */
-
     return 0;
 }
