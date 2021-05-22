@@ -1,9 +1,7 @@
 #include <iostream>
-#include <pthread.h>
 #include <thread>
 #include <cstdlib>
 #include <vector>
-#include <sstream>
 #include <unistd.h>
 
 #define MAX_COMMAND_LENGTH
