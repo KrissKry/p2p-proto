@@ -4,7 +4,7 @@
 #include <vector>
 #include <unistd.h>
 
-#define MAX_COMMAND_LENGTH
+#define MAX_COMMAND_LENGTH 1024
 
 struct ResourceHeader {
     char name[255];
@@ -80,9 +80,9 @@ void safeOutput(const std::string &str) {
     m.unlock();
 }
 
-char* safeInput(char* command, int maxCommandLength) {
+char* safeInput(char* command) {
     m.lock();
-    std::cin.getline(command, maxCommandLength);
+    std::cin.getline(command, MAX_COMMAND_LENGTH);
     m.unlock();
     return command;
 }
@@ -134,11 +134,10 @@ int main(int argc, char *argv[]) {
 
     // tcp listening thread
 
-    int maxCommandLength = 256;
-    char command[maxCommandLength];
+    char command[MAX_COMMAND_LENGTH];
     int parseResult;
 
-    while (safeInput(command, maxCommandLength)) {
+    while (safeInput(command)) {
         parseResult = parseCommand(command);
         switch (parseResult) {
             case -1:
