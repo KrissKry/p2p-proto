@@ -1,8 +1,11 @@
 #include <iostream>
 #include <thread>
-#include <cstdlib>
 #include <vector>
+
+#ifdef __linux__
 #include <mutex>
+#elif __APPLE__
+#endif
 
 #define MAX_COMMAND_LENGTH 1024
 
