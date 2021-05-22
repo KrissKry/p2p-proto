@@ -1,37 +1,41 @@
 #include <iostream>
+#include <pthread.h>
+#include <thread>
+#include <cstdlib>
+#include <vector>
+#include <sstream>
+#include <unistd.h>
 
-struct ResourceHeader
-{
+#define MAX_COMMAND_LENGTH
+
+struct ResourceHeader {
     char name[255];
     uint64_t size;
     char uuid[16];
     uint64_t timestamp;
 };
 
-struct Resource
-{
+struct Resource {
     struct ResourceHeader;
     char *data;
 };
 
-struct User
-{
+struct User {
     char uuid[128];
     char ip[16]; //: 192.168.0.x;
     unsigned int port;
 };
 
-struct ProtoPacket
-{
+struct ProtoPacket {
     char command;
     struct ResourceHeader;
     char *data;
 };
 
-class NetworkComponent
-{
+class NetworkComponent {
 public:
     NetworkComponent();
+
     ~NetworkComponent();
 
     // TCP
@@ -43,10 +47,10 @@ public:
 private:
 };
 
-class UI
-{
+class UI {
 public:
     UI();
+
     ~UI();
 
 private:
@@ -60,17 +64,33 @@ private:
     // void listDisk();
 };
 
-class FileHandler
-{
+class FileHandler {
 public:
 private:
     int createFile();
+
     int deleteFile();
+
     int getFile();
 };
 
-int main(int argc, char *argv[])
-{
+std::mutex m;
+
+void safeOutput(const std::string &str) {
+    m.lock();
+    std::cout << str << std::endl << std::flush;
+    m.unlock();
+}
+
+char* safeInput(char* command, int maxCommandLength) {
+    m.lock();
+    std::cin.getline(command, maxCommandLength);
+    m.unlock();
+    return command;
+}
+
+int main(int argc, char *argv[]) {
+
     /* podział prac
     Waldek - UDP
     Konrad - FileHandler - stworzenie zasobu, usunięcie go, przechowywanie w koneterze, zwrócenie wszystkich,
