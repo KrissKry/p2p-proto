@@ -89,7 +89,33 @@ char* safeInput(char* command, int maxCommandLength) {
     return command;
 }
 
+void independentThread()
+{
+    safeOutput("Start thread");
+    std::this_thread::sleep_for(std::chrono::seconds(5));
+    safeOutput("Exit thread");
+}
+
+void threadCaller()
+{
+    std::thread t(independentThread);
+    t.detach();
+}
+
 int main(int argc, char *argv[]) {
+    safeOutput("Session started");
+
+    // utp listening thread
+
+    // tcp listening thread
+
+    int maxCommandLength = 256;
+    char command[maxCommandLength];
+    int parseResult;
+
+    while (safeInput(command, maxCommandLength)) {
+        // parse command
+    }
 
     /* podział prac
     Waldek - UDP
