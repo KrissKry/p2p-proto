@@ -47,18 +47,23 @@ int main(int argc, char *argv[]) {
 
         TCPConnector connection(sock, addr);
         connection.responseData(&resource);
-
+        
 
 
     } else if ( strcmp(argv[1], "RECEIVE") == 0) {
         Resource dest;
         dest.data = new char[16];
 
-        unsigned long dest_address = 3232246428;
+        // unsigned long dest_address = 3232246428;
+        const char* dest_address = "192.168.42.156";
         unsigned short dest_port = 8080;
 
         TCPConnector connection(sock, dest_port, dest_address);
-    
+        std::cout << "fetching\n";
+        connection.fetchData(&dest);
+        std::cout << "post fetch\n";
+
+        std::cout << dest.data << std::endl;
     } else {
         std::cout << "Wrong command!\n";
     }

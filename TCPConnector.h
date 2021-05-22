@@ -6,6 +6,7 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <string.h>
+#include <arpa/inet.h>
 #include <iostream>
 
 #include "Resource.h"
@@ -18,17 +19,21 @@ class TCPConnector {
 
 
     public:
-        TCPConnector(int socket, unsigned short port, unsigned long address) {
+        TCPConnector(int socket, unsigned short port, const char* address) {
 
-            remote_addr.sin_port = htonl(address);
-            remote_addr.sin_addr.s_addr = htons(port);
+            remote_addr.sin_port = htons(port);
+            
+            remote_addr.sin_addr.s_addr = inet_addr(address);
             remote_addr.sin_family = AF_INET;
             memset(&(remote_addr.sin_zero), '\0', 8);
+
+            // std::cout << remote_addr.sin_port << " " << remote_addr.sin_addr.s_addr << " " << address << std::endl;
 
             this->socket = socket;
             this->port = port;
             this->address = address;
         }
+
         TCPConnector(int socket, const struct sockaddr_in &addr) {
             this->socket = socket;
             this->remote_addr = addr;
@@ -70,16 +75,18 @@ class TCPConnector {
                 
             }
 
-            std::cout << "[I] Sent " << bytes_sent << " bytes\n"; 
-            return bytes_sent;
+            std::cout << "[I] Sent everything\n";
+            return 0;
         }
 
 
         int fetchData(struct Resource* file) {
             //zalozenie jest takie że przed pobraniem pliku, rezerwujemy przestrzen na 'dysku' na plik -> przekazana struktura jest juz w pelni gotowa na odebranie n bajtow
-            
-            if( connect(socket, (struct sockaddr *)&remote_addr, sizeof(remote_addr) < 0) ) {
-                puts("[ERR] fetchData() connect error\n");
+            std::cout << remote_addr.sin_addr.s_addr << " " << remote_addr.sin_port << std::endl;
+            int error;
+            if( error = connect(socket, (struct sockaddr *)&remote_addr, sizeof(remote_addr)) < 0 ) {
+                puts("[ERR] fetchData() connect error");
+                std::cout << "[ERR] " << strerror(errno) <<"\n";
                 return -1;
             }
 
@@ -110,7 +117,7 @@ class TCPConnector {
     private:
         int socket;
         unsigned short port;
-        unsigned long address;
+        const char* address;
         sockaddr_in remote_addr;
 };
 
