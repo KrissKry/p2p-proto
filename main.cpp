@@ -114,10 +114,14 @@ bool parseCommand(char *command) {
     std::vector<std::string> tokenList;
     splitCommandOnSpace(str, tokenList);
 
-    if(tokenList[0] == "quit") {
+    if(tokenList.size() == 1 && tokenList[0] == "quit") {
         return false;
-    } else if (tokenList[0] == "thread") {
-        threadCaller();
+    } else if (tokenList.size() == 4 && tokenList[0] == "upload" && tokenList[2] == "as") {
+        // FileHandler.upload(tokenList[1], tokenList[3]);
+    } else if (tokenList.size() == 2 && tokenList[0] == "download") {
+        // FileHandler.download(tokenList[1]);
+    } else if (tokenList.size() == 2 && tokenList[0] == "delete") {
+        // FileHandler.delete(tokenList[1]);
     } else {
         safeOutput("Invalid command");
     }
