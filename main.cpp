@@ -95,7 +95,7 @@ void threadCaller() {
     t.detach();
 }
 
-void splitCommandOnSpace(const std::string &s, std::vector<std::string> &v) {
+void splitStringOnSpace(const std::string &s, std::vector<std::string> &v) {
     std::string temp;
     for (char i : s) {
         if (i == ' ') {
@@ -112,7 +112,7 @@ bool parseCommand(char *command) {
     safeInput(command);
     std::string str(command);
     std::vector<std::string> tokenList;
-    splitCommandOnSpace(str, tokenList);
+    splitStringOnSpace(str, tokenList);
 
     if(tokenList.size() == 1 && tokenList[0] == "quit") {
         return false;
