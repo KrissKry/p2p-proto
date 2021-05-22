@@ -89,6 +89,33 @@ char* safeInput(char* command, int maxCommandLength) {
     return command;
 }
 
+void splitCommandOnSpace(const std::string& s, std::vector<std::string>& v) {
+    std::string temp;
+    for(char i : s){
+        if(i==' '){
+            v.push_back(temp);
+            temp = "";
+        }
+        else{
+            temp.push_back(i);
+        }
+    }
+    v.push_back(temp);
+}
+
+int parseCommand(char *command) {
+    std::string str(command);
+    std::vector<std::string> tokenList;
+    splitCommandOnSpace(str, tokenList);
+
+    if (tokenList[0] == "quit") {
+        return 0;
+    } else if (tokenList[0] == "upload") {
+        return 1;
+    }
+    return -1;
+}
+
 void independentThread()
 {
     safeOutput("Start thread");
@@ -114,7 +141,19 @@ int main(int argc, char *argv[]) {
     int parseResult;
 
     while (safeInput(command, maxCommandLength)) {
-        // parse command
+        parseResult = parseCommand(command);
+        switch (parseResult) {
+            case -1:
+                safeOutput("Invalid command");
+                break;
+            case 0:
+                exit(0);
+            case 1:
+                threadCaller();
+                break;
+            default:
+                break;
+        }
     }
 
     /* podział prac
