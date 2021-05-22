@@ -84,6 +84,17 @@ char *safeInput(char *command) {
     return command;
 }
 
+void independentThread() {
+    safeOutput("Start thread");
+    std::this_thread::sleep_for(std::chrono::seconds(5));
+    safeOutput("Exit thread");
+}
+
+void threadCaller() {
+    std::thread t(independentThread);
+    t.detach();
+}
+
 void splitCommandOnSpace(const std::string &s, std::vector<std::string> &v) {
     std::string temp;
     for (char i : s) {
@@ -97,28 +108,20 @@ void splitCommandOnSpace(const std::string &s, std::vector<std::string> &v) {
     v.push_back(temp);
 }
 
-int parseCommand(char *command) {
+bool parseCommand(char *command) {
+    safeInput(command);
     std::string str(command);
     std::vector<std::string> tokenList;
     splitCommandOnSpace(str, tokenList);
 
-    if (tokenList[0] == "quit") {
-        return 0;
-    } else if (tokenList[0] == "upload") {
-        return 1;
+    if(tokenList[0] == "quit") {
+        return false;
+    } else if (tokenList[0] == "thread") {
+        threadCaller();
+    } else {
+        safeOutput("Invalid command");
     }
-    return -1;
-}
-
-void independentThread() {
-    safeOutput("Start thread");
-    std::this_thread::sleep_for(std::chrono::seconds(5));
-    safeOutput("Exit thread");
-}
-
-void threadCaller() {
-    std::thread t(independentThread);
-    t.detach();
+    return true;
 }
 
 int main(int argc, char *argv[]) {
@@ -129,22 +132,8 @@ int main(int argc, char *argv[]) {
     // tcp listening thread
 
     char command[MAX_COMMAND_LENGTH];
-    int parseResult;
 
-    while (safeInput(command)) {
-        parseResult = parseCommand(command);
-        switch (parseResult) {
-            case -1:
-                safeOutput("Invalid command");
-                break;
-            case 0:
-                exit(0);
-            case 1:
-                threadCaller();
-                break;
-            default:
-                break;
-        }
-    }
+    while (parseCommand(command));
+
     return 0;
 }
