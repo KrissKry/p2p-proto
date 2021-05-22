@@ -130,16 +130,21 @@ int main(int argc, char *argv[]) {
 
     char command[MAX_COMMAND_LENGTH];
     int parseResult;
+    bool shouldQuit = false;
 
-    while (safeInput(command)) {
+    while (!shouldQuit) {
+        safeInput(command);
         parseResult = parseCommand(command);
         switch (parseResult) {
             case -1:
                 safeOutput("Invalid command");
                 break;
             case 0:
-                exit(0);
+                safeOutput("Quitting...");
+                shouldQuit = true;
+                break;
             case 1:
+                safeOutput("Valid command");
                 threadCaller();
                 break;
             default:
