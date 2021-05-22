@@ -10,6 +10,6 @@ struct ResourceHeader
 
 struct Resource
 {
-    struct ResourceHeader;
+    struct ResourceHeader header;
     char *data;
 };

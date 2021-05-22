@@ -6,6 +6,7 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <string.h>
+#include <iostream>
 
 #include "Resource.h"
 
@@ -28,48 +29,79 @@ class TCPConnector {
             this->port = port;
             this->address = address;
         }
-        TCPConnector(const struct sockaddr_in &addr) {
-
+        TCPConnector(int socket, const struct sockaddr_in &addr) {
+            this->socket = socket;
             this->remote_addr = addr;
         }
 
         ~TCPConnector() {}
 
 
+        int responseData(const struct Resource* file) {
 
-        int sendData(const struct Resource* file) {
-
-            if( connect(socket, (struct sockaddr*)&remote_addr, sizeof(remote_addr)) < 0 ) {
-                puts("[ERR] sendData() connect error\n");
-                return -1;
-            }
-
-            if ( send(socket, file, sizeof(file), 0) < 0) {
-                puts("[ERR] sendData() send error\n");
-                return -1;
-            }
-
-            return 0;
-        }
-
-
-        int receiveData(struct Resource* file) {
-            
+            std::cout << "[I] Listening on " << remote_addr.sin_addr.s_addr << ":" << remote_addr.sin_port << std::endl;
             if( listen(socket, 1) < 0 ) {
-                puts("[ERR] receiveData() listen error\n");
+                puts("[ERR] sendData() listen error\n");
                 return -1;
             }
 
             socklen_t len = sizeof(remote_addr);
-            if ( accept(socket, (struct sockaddr *)&remote_addr, &len) < 0 ) {
-                puts("[ERR] receiveData() accept error\n");
+            int receiver;
+            if ( receiver = accept(socket, (struct sockaddr *)&remote_addr, &len) < 0 ) {
+                puts("[ERR] sendData() accept error\n");
                 return -1;
             }
 
-            if (recv(socket, (void*)&file, sizeof(&file), 0) < 0) {
-                puts("[ERR] sendData() receive error\n");
+
+            int bytes_sent = 1;
+            int bytes_left_to_send = sizeof(&file);
+            while ( bytes_sent && bytes_left_to_send ) {
+
+                bytes_sent = send( receiver, (void *) &file, bytes_left_to_send, 0);
+
+                if (bytes_sent < 0 ) {
+                    puts("[ERR] Sending file failed!");
+                    return -1;
+                }
+
+                std::cout << "[I] Sent " << bytes_sent << " bytes\n";
+                file += bytes_sent;
+                bytes_left_to_send -= bytes_sent;
+                
+            }
+
+            std::cout << "[I] Sent " << bytes_sent << " bytes\n"; 
+            return bytes_sent;
+        }
+
+
+        int fetchData(struct Resource* file) {
+            //zalozenie jest takie że przed pobraniem pliku, rezerwujemy przestrzen na 'dysku' na plik -> przekazana struktura jest juz w pelni gotowa na odebranie n bajtow
+            
+            if( connect(socket, (struct sockaddr *)&remote_addr, sizeof(remote_addr) < 0) ) {
+                puts("[ERR] fetchData() connect error\n");
                 return -1;
             }
+
+            // if ( recv(socket, (void *)&file->header, sizeof(file->header), 0) < 0) {
+            //     puts("[ERR] fetchData() receiving header");
+            //     return -1;
+            // }
+            int bytes_recv = 1;
+            int bytes_left_to_recv = sizeof(&file);
+
+            while ( bytes_recv ) {
+
+                bytes_recv = recv(socket, (void*)&file, bytes_left_to_recv, 0);
+
+                std::cout << "[I] Recv " << bytes_recv << " bytes\n";
+
+                file += bytes_recv;
+                bytes_left_to_recv -= bytes_recv;
+            }
+
+
+            puts("[I] Received data :D");
 
             return 0;
         }
