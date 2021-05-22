@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
     // bind(sock, (struct sockaddr*)&addr, len);
 
     // std::cout << argv[1];
-    if ( strcmp(argv[1], "LISTEN") == 0) {
+    if ( strcmp(argv[1], "RESPOND") == 0) {
 
         //pc 192.168.42.156
         Resource resource;
@@ -50,7 +50,7 @@ int main(int argc, char *argv[]) {
         
 
 
-    } else if ( strcmp(argv[1], "RECEIVE") == 0) {
+    } else if ( strcmp(argv[1], "FETCH") == 0) {
         Resource dest;
         dest.data = new char[16];
 
