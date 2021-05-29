@@ -8,6 +8,8 @@
 #include <string.h>
 #include <arpa/inet.h>
 #include <iostream>
+#include <sys/socket.h>
+
 
 #include "Resource.h"
 
@@ -42,9 +44,10 @@ class TCPConnector {
         ~TCPConnector() {}
 
 
-        int responseData(const struct Resource* file) {
+        /*int responseData(const struct Resource* file) {
 
             std::cout << "[I] Listening on " << remote_addr.sin_addr.s_addr << ":" << remote_addr.sin_port << std::endl;
+            std::cout << "[I] Data length: " << strlen(file->data) << "\n"; 
             if( listen(socket, 1) < 0 ) {
                 puts("[ERR] sendData() listen error\n");
                 return -1;
@@ -57,92 +60,109 @@ class TCPConnector {
                 return -1;
             }
 
-
-            // int bytes_sent = 1;
-            // int bytes_left_to_send = sizeof(file->header) + strlen(file->data);
-
-            // while ( bytes_sent && bytes_left_to_send ) {
-
-            //     bytes_sent = send( receiver, (void *) &file, bytes_left_to_send, 0);
-
-            //     if (bytes_sent < 0 ) {
-            //         std::cout << "[ERR] " << strerror(errno) <<"\n";
-            //         return -1;
-            //     }
-
-
-            //     std::cout << "[I] Sent " << bytes_sent << " bytes\n";
-            //     file += bytes_sent;
-            //     bytes_left_to_send -= bytes_sent;                
-            // }
-
-            // std::cout << "[I] Sent everything\n";
-            // int hdr
-            if ( !sendHeader(socket, (void *)&file->header, sizeof(file->header)) ) {
-
+            if ( !sendHeader(receiver, (void *)&file->header, sizeof(file->header)) ) {
+                printError();
+                return -1;
             }
 
-            if ( !sendData(socket, (void *)&file->data) ) {
+            if ( !sendData(receiver, (void *)&file->data, strlen(file->data) ) ) {
                 printError();
                 return -1;
             }
 
             return 0;
+        }*/
+        int setupClient() {
+            int error;
+            if ( (error = connect(this->socket, (struct sockaddr *)&remote_addr, sizeof(remote_addr))) < 0 ) {
+                printError();
+                return -1;
+            }
+            return 0;
         }
 
+        int setupServer() {
+            if( listen(socket, 10) < 0 ) {
+                printError();
+                return -1;
+            }
+            
+            std::cout << "[I] Listening on " << remote_addr.sin_addr.s_addr << ":" << remote_addr.sin_port << "\n";
 
-        int fetchData(struct Resource* file) {
+            //wyslac żądanie o wątek na obsłużenie wysyłania pliku czy coś
+            int receiver;
+            socklen_t len = sizeof(remote_addr);
+
+            if ( (receiver = accept(socket, (struct sockaddr *)&remote_addr, &len)) < 0 ) {
+                printError();
+                return -1;
+            }
+
+            //zwrocenie deskryptora socketu do wysylania danych
+            return receiver;
+        }
+
+        int sendData(int sockfd, void *ptr, unsigned long long data_size) {
+            int bytes_sent = 0;
+            void* data_ptr = &ptr;
+
+            while( (bytes_sent = send(sockfd, data_ptr, data_size, 0) ) > 0) {
+                if (bytes_sent < 0) {
+                    printError();
+                    return -1;
+                }
+
+                std::cout << "[I] Sent " << bytes_sent << " bytes\n";
+                data_size -= bytes_sent;
+                data_ptr = static_cast<char*>(data_ptr) + bytes_sent;
+            }
+            return 0;
+        }
+
+        int receiveData(void *ptr, unsigned long long data_size) {
+            int bytes_received = 0;
+            void* data_ptr = &ptr;
+
+            while( (bytes_received = recv(this->socket, data_ptr, data_size, 0)) > 0) {
+
+                if (bytes_received < 0) {
+                    printError();
+                    return -1;
+                }
+
+                std::cout << "[I] Received " << bytes_received << " bytes\n";
+                data_size -= bytes_received;
+                data_ptr = static_cast<char*>(data_ptr) + bytes_received;
+            }
+            return 0;
+        }
+        /*int fetchData(struct Resource* file) {
             //zalozenie jest takie że przed pobraniem pliku, rezerwujemy przestrzen na 'dysku' na plik -> przekazana struktura jest juz w pelni gotowa na odebranie n bajtow
-            std::cout << remote_addr.sin_addr.s_addr << " " << remote_addr.sin_port << std::endl;
-            std::cout << "size of file:" << sizeof(file->header) << "\n";
+            // std::cout << remote_addr.sin_addr.s_addr << " " << remote_addr.sin_port << std::endl;
+            // std::cout << "size of file:" << sizeof(file->header) << "\n";
 
             void *hdr = &file->header;
             void *rsr_data = &file->data;
             // std::cout<< &file->data << " " << rsr_data << "\n";
             int error;
-            if( error = connect(socket, (struct sockaddr *)&remote_addr, sizeof(remote_addr)) < 0 ) {
+            if( (error = connect(socket, (struct sockaddr *)&remote_addr, sizeof(remote_addr))) < 0 ) {
                 std::cout << "[ERR] " << strerror(errno) <<"\n";
                 return -1;
             }
 
-
-            // int bytes_recv = 1;
-            // //p = static_cast<char*>(p) + 1;
-            // if( !recv(socket, hdr, sizeof(file->header), 0) ) {
-            //     std::cout << "[ERR] " << strerror(errno) <<"\n";
-            //     return -1;
-            // }
-
-
-
-            // std::cout<<file->header.name << " xd \n";
-            // while ( bytes_recv ) {
-
-            //     bytes_recv = recv(socket, rsr_data, 1000, 0);
-
-            //     std::cout << "[I] Recv " << bytes_recv << " bytes\n";
-
-            //     rsr_data = static_cast<char*>(rsr_data) + bytes_recv;
-            // }
-
-
-            // // puts("[I] Received data :D");
-            // std::cout<<"data "<<file->data<<"\n";
-
-
-            if ( !recvHeader(socket, (void *)&file->header, sizeof(file->header)) ) {
+            if ( !recvHeader(hdr, sizeof(file->header)) ) {
+                printError();
+                return -1;
+            }
+            // std::cout << "header!!!\n";
+            if ( !recvData(rsr_data)) {
                 printError();
                 return -1;
             }
 
-            if ( !recvData(socket, (void *)&file->data)) {
-                printError();
-                return -1;
-            }
-
-
+            // std::cout << "data!!!\n";
             return 0;
-        }
+        }*/
     
         
     private:
@@ -155,38 +175,52 @@ class TCPConnector {
             std::cout << "[ERR] " << strerror(errno) << "\n";
         }
 
-        int sendHeader(int sockfd, void* hdr, int size) {
-            return send(sockfd, hdr, size, 0);
+        /*int sendHeader(int sockfd, void* hdr, int size) {
+            int sent = send(sockfd, hdr, size, 0);
+            std::cout << "sent header! " << sent << std::endl;
+            return sent;
         }
-        int recvHeader(int sockfd, void* hdr, int size) {
-            return recv(sockfd, hdr, size, 0);
+        int recvHeader(void* hdr, int size) {
+            // std::cout << "receiving h e a d e r @" << hdr << " onsocket " << this->socket << "\n";
+            
+            // while (true ) {
+
+            // }
+            int receiving = recv(this->socket, hdr, size, 0);
+
+            std::cout << receiving << std::endl;
+            return receiving;
         }
-        int sendData(int sockfd, void* data) {
+        int sendData(int sockfd, void* data, unsigned long long length) {
             
             void* data_ptr = data;
             int bytes_sent = 0;
             int loop_send = 0;
-
+            // int bytes_left = strlen((const char *) data);
+            // std()
+            std::cout << "bytes left t o send "<< &data << "\n";
+            
             while ( true ) {
                 
-                if ( (loop_send = send(sockfd, data_ptr, 1000, 0)) < 0 ) {
+                if ( (loop_send = send(sockfd, data_ptr, length, 0)) < 0 ) {
                     printError();
                     return -1;
                 }
                 std::cout << "[I] Sent " << loop_send << " bytes\n";
-                bytes_sent += loop_send;
+                
 
-                if ( loop_send == 0 ) {
+
+                bytes_sent += loop_send;
+                length -= loop_send;
+                if ( loop_send == 0 || length == 0) {
                     // delete data_ptr;
                     return bytes_sent;
                 }
-
-
                 data_ptr = static_cast<char*>(data_ptr) + loop_send;
             }
 
         }
-        int recvData(int sockfd, void* data) {
+        int recvData(void* data) {
 
             void* data_ptr = data;
             int bytes_received = 0;
@@ -194,7 +228,7 @@ class TCPConnector {
 
             while (true) {
 
-                if ( (loop_receive = recv(sockfd, data_ptr, 1000, 0)) < 0 ) {
+                if ( (loop_receive = recv(this->socket, data_ptr, 1000, 0)) < 0 ) {
                     printError();
                     return -1;
                 }
@@ -208,7 +242,9 @@ class TCPConnector {
 
                 data_ptr = static_cast<char*>(data_ptr) + loop_receive;
             }
-        }
+        }*/
+
+        
 };
 
 
