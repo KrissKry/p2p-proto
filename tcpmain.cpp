@@ -30,17 +30,14 @@ int main(int argc, char *argv[]) {
 
     if ( strcmp(argv[1], "SERVER") == 0) {
 
-        //pc 192.168.42.156
         Resource resource;
         strcpy(resource.header.name, "DROP DATABASE");
-        resource.header.size = 16;
         strcpy( resource.header.uuid, "PC-1" );
         resource.header.timestamp = 12346277542; 
-        resource.data = new char[resource.header.size];
 
-        // std::cout << "rozmiar danych: " << sizeof(&resource.data) << " " << resource.data << std::endl;
-        strcpy(resource.data, "aabbccddeeffggh");
-        // std::cout << "rozmiar danych: " << strlen(resource.data) << " " << resource.data << std::endl;
+        const char* data = "aabbccddeeffggh";
+        resource.header.size = strlen(data);
+        strcpy(resource.data, data);
 
         int bind_res, fd;
         if ( (bind_res = bind(sock, (struct sockaddr *)&addr, sizeof(addr))) < 0) {
@@ -74,8 +71,6 @@ int main(int argc, char *argv[]) {
 
     } else if ( strcmp(argv[1], "CLIENT") == 0) {
         Resource dest;
-        dest.header.size = 16;
-        dest.data = new char[16];
 
         std::cout << "[I] Res size "<< sizeof(dest) <<"\n";
         std::cout << "[I] Header size " << sizeof(dest.header) << "\n";
@@ -98,12 +93,13 @@ int main(int argc, char *argv[]) {
         }
 
         /* receive resource data */
+        dest.data = new char [dest.header.size];
         if ( connection.receiveData( static_cast<void *>(&dest.data), dest.header.size) < 0) {
             std::cout << "[ERR] Exit in main @data\n";
             return -1;
         }
 
-        std::cout << "[I] Data received: " << dest.data << "\n";
+        std::cout << "[I] Data received: " << &dest.data << "\n";
     } else {
         std::cout << "[ERR] Wrong command!\n";
     }
