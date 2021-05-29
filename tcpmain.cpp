@@ -39,9 +39,14 @@ int main(int argc, char *argv[]) {
         resource.header.size = 16;
         strcpy( resource.header.uuid, "PC-1" );
         resource.header.timestamp = 12346277542; 
-        resource.data = new char [resource.header.size];
-        // resource.data = "aabbccddeeffggh";
+        resource.data = new char[resource.header.size];
+
+        std::cout << "rozmiar danych: " << sizeof(&resource.data) << " " << resource.data << std::endl;
         strcpy(resource.data, "aabbccddeeffggh");
+        std::cout << "rozmiar danych: " << strlen(resource.data) << " " << resource.data << std::endl;
+
+
+
         int bind_res = bind(sock, (struct sockaddr *)&addr, sizeof(addr));
 
 
@@ -54,9 +59,11 @@ int main(int argc, char *argv[]) {
         Resource dest;
         dest.data = new char[16];
 
-        // unsigned long dest_address = 3232246428;
-        const char* dest_address = "192.168.42.156";
+        std::cout << "rozmiar pliku: "<< sizeof(dest) <<"\n";
+
+        const char* dest_address = "192.168.0.21";
         unsigned short dest_port = 8080;
+
 
         TCPConnector connection(sock, dest_port, dest_address);
         std::cout << "fetching\n";
