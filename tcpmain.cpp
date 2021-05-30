@@ -2,6 +2,7 @@
 
 
 #include <iostream>
+#include <unistd.h>
 
 int main(int argc, char *argv[]) {
 
@@ -19,8 +20,6 @@ int main(int argc, char *argv[]) {
         std::cout << "[ERR] " << strerror(errno);
         return -1;
     }
-    // std::cout << "skarpeta " << sock << std::endl;
-
 
     addr.sin_family = AF_INET;
     addr.sin_port = htons(8080);
@@ -35,12 +34,14 @@ int main(int argc, char *argv[]) {
         strcpy( resource.header.uuid, "PC-1" );
         resource.header.timestamp = 12346277542; 
 
-        std::string data = "aabbccddeeffggh";
-        resource.data.assign(data.begin(), data.end());
 
+        std::string data = "aabbccddeeff\0";
+        resource.data.assign(data.begin(), data.end());
+        resource.header.size = resource.data.size();
 
 
         int bind_res, fd;
+
         if ( (bind_res = bind(sock, (struct sockaddr *)&addr, sizeof(addr))) < 0) {
             std::cout << "[ERR] " << strerror(errno);
             return -1;
@@ -48,12 +49,13 @@ int main(int argc, char *argv[]) {
 
         TCPConnector connection(sock, addr);
 
-
+        /* start listening on socket */
         if (connection.serverListen() < 0) {
             std::cout << "[ERR] Exit in main @serverListen\n";
             return -1;
         }
 
+        /* accept incoming request */
         if ( (fd = connection.serverAccept() ) < 0 ) {
             std::cout << "[ERR] Exit in main @serverAccept\n";
             return -1;
@@ -72,15 +74,12 @@ int main(int argc, char *argv[]) {
         }
 
 
-
+        close(fd);
 
 
     } else if ( strcmp(argv[1], "CLIENT") == 0) {
-        Resource dest;
 
-        std::cout << "[I] Res size "<< sizeof(dest) <<"\n";
-        std::cout << "[I] Header size " << sizeof(dest.header) << "\n";
-        std::cout << "[I] Data size " << dest.header.size << "\n";
+        Resource dest;
         const char* dest_address = "192.168.0.21";
         unsigned short dest_port = 8080;
 
@@ -105,16 +104,18 @@ int main(int argc, char *argv[]) {
             return -1;
         }
 
-        std::cout << "[I] Data received: " << &dest.data << "\n";
+        std::cout << "[I] Data received: ";
+        for(int i = 0; i < dest.data.size(); i++) {
+            std::cout << dest.data.at(i);
+        }
+        std::cout << "\n";
+
     } else {
         std::cout << "[ERR] Wrong command!\n";
     }
 
 
 
-    // strcpy( resource.)
-    
-
-
+    close(sock);
     return 0;
 }
