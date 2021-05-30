@@ -81,14 +81,19 @@ class TCPConnector {
             return 0;
         }
 
-        int setupServer() {
+        // int setupServer() {}
+
+        int serverListen() {
             if( listen(socket, 10) < 0 ) {
                 printError();
                 return -1;
             }
-            
             std::cout << "[I] Listening on " << remote_addr.sin_addr.s_addr << ":" << remote_addr.sin_port << "\n";
+            return 0;
+        }
 
+
+        int serverAccept() {
             //wyslac żądanie o wątek na obsłużenie wysyłania pliku czy coś
             int receiver;
             socklen_t len = sizeof(remote_addr);
@@ -101,6 +106,7 @@ class TCPConnector {
             //zwrocenie deskryptora socketu do wysylania danych
             return receiver;
         }
+
 
         int sendData(int sockfd, void *ptr, unsigned long long data_size) {
             int bytes_sent = 0;

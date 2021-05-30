@@ -35,9 +35,10 @@ int main(int argc, char *argv[]) {
         strcpy( resource.header.uuid, "PC-1" );
         resource.header.timestamp = 12346277542; 
 
-        const char* data = "aabbccddeeffggh";
-        resource.header.size = strlen(data);
-        strcpy(resource.data, data);
+        std::string data = "aabbccddeeffggh";
+        resource.data.assign(data.begin(), data.end());
+
+
 
         int bind_res, fd;
         if ( (bind_res = bind(sock, (struct sockaddr *)&addr, sizeof(addr))) < 0) {
@@ -47,9 +48,14 @@ int main(int argc, char *argv[]) {
 
         TCPConnector connection(sock, addr);
 
-        /* listen & accept incoming connection */
-        if ( (fd = connection.setupServer() ) < 0 ) {
-            std::cout << "[ERR] Exit in main @setupServer\n";
+
+        if (connection.serverListen() < 0) {
+            std::cout << "[ERR] Exit in main @serverListen\n";
+            return -1;
+        }
+
+        if ( (fd = connection.serverAccept() ) < 0 ) {
+            std::cout << "[ERR] Exit in main @serverAccept\n";
             return -1;
         }
 
@@ -60,7 +66,7 @@ int main(int argc, char *argv[]) {
         }
 
         /* send resource data */
-        if( connection.sendData(fd,  static_cast<void *>(&resource.data), strlen(resource.data)) < 0) {
+        if( connection.sendData(fd,  static_cast<void *>(&resource.data[0]), resource.data.size()) < 0) {
             std::cout << "[ERR] Exit in main @data\n";
             return -1;
         }
@@ -93,8 +99,8 @@ int main(int argc, char *argv[]) {
         }
 
         /* receive resource data */
-        dest.data = new char [dest.header.size];
-        if ( connection.receiveData( static_cast<void *>(&dest.data), dest.header.size) < 0) {
+        dest.data.resize(dest.header.size);
+        if ( connection.receiveData( static_cast<void *>(&dest.data[0]), dest.data.size()) < 0) {
             std::cout << "[ERR] Exit in main @data\n";
             return -1;
         }

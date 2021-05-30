@@ -1,5 +1,5 @@
 #include <stdint.h>
-
+#include <vector>
 struct ResourceHeader
 {
     char name[255];
@@ -11,5 +11,6 @@ struct ResourceHeader
 struct Resource
 {
     struct ResourceHeader header;
-    char *data;
+    // char *data;
+    std::vector<unsigned char> data;
 };
