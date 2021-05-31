@@ -1,13 +1,6 @@
-<<<<<<< HEAD
 #include <stdint.h>
 #include <vector>
 
-=======
-#ifndef RESOURCE_H
-#define RESOURCE_H
-
-#include <stdint.h>
->>>>>>> threads
 namespace Commands
 {
     const char CREATE = '1';
@@ -31,32 +24,14 @@ struct ResourceHeader
 
 struct Resource
 {
-<<<<<<< HEAD
     struct ResourceHeader header;
     // char *data;
     std::vector<unsigned char> data;
-=======
-    struct ResourceHeader resourceHeader;
-    char *data;
-};
-
-struct User
-{
-    char uuid[128];
-    char ip[16]; //: 192.168.0.x;
-    unsigned int port;
->>>>>>> threads
 };
 
 struct ProtoPacket
 {
     char command;
     struct ResourceHeader resourceHeader;
-<<<<<<< HEAD
     std::vector<unsigned char> data;
 };
-=======
-    char *data;
-};
-#endif
->>>>>>> threads
