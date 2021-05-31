@@ -4,8 +4,8 @@
 
 #include <iostream>
 #include <vector>
-#include "UI.h"
-#include "utils.h"
+#include "../include/UI.h"
+#include "../include/utils.h"
 
 UI::UI(Supervisor *supervisor): supervisor(supervisor) {
 
@@ -51,7 +51,7 @@ bool UI::parseCommand() {
             safeOutput("No resources");
         } else {
             for (Resource res: resourceList) {
-                safeOutput(res.resourceHeader.name);
+                safeOutput(res.header.name);
             }
         }
     } else {

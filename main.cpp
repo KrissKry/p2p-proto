@@ -1,5 +1,5 @@
-#include "Supervisor.h"
-#include "UI.h"
+#include "include/Supervisor.h"
+#include "include/UI.h"
 
 //void independentThread() {
 //    safeOutput("Start thread");

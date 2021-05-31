@@ -32,6 +32,6 @@ struct Resource
 struct ProtoPacket
 {
     char command;
-    struct ResourceHeader resourceHeader;
+    struct ResourceHeader header;
     std::vector<unsigned char> data;
 };

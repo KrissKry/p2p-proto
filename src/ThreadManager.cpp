@@ -2,7 +2,7 @@
 // Created by Michal Wiszenko on 30.05.2021.
 //
 
-#include "ThreadManager.h"
+#include "../include/ThreadManager.h"
 
 void ThreadManager::createThread(std::thread thread) {
     threads.emplace_back(std::move(thread));
