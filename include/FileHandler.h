@@ -6,7 +6,8 @@
 #include<iostream>
 #include<chrono>
 #include<fstream>
-#include"resource.h"
+#include "Resource.h"
+#include <string.h>
 
 class FileHandler {
 private:
