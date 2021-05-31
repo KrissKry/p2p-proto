@@ -1,86 +1,24 @@
-#include <iostream>
+#include "Supervisor.h"
+#include "UI.h"
 
-struct ResourceHeader
-{
-    char name[255];
-    uint64_t size;
-    char uuid[16];
-    uint64_t timestamp;
-};
+//void independentThread() {
+//    safeOutput("Start thread");
+//    std::this_thread::sleep_for(std::chrono::seconds(5));
+//    safeOutput("Exit thread");
+//}
+//
+//void threadCaller() {
+//    std::thread t(independentThread);
+//    t.detach();
+//}
 
-struct Resource
-{
-    struct ResourceHeader;
-    char *data;
-};
-
-struct User
-{
-    char uuid[128];
-    char ip[16]; //: 192.168.0.x;
-    unsigned int port;
-};
-
-struct ProtoPacket
-{
-    char command;
-    struct ResourceHeader;
-    char *data;
-};
-
-class NetworkComponent
-{
-public:
-    NetworkComponent();
-    ~NetworkComponent();
-
-    // TCP
-    // int sendFile(const struct& Resource res);
-    // int receiveFile();
-    // UDP - napisze ja (debil znajde cię)
-    // int broadcast(const struct& ProtoPacket pack)
-
-private:
-};
-
-class UI
-{
-public:
-    UI();
-    ~UI();
-
-private:
-    void listOptions();
-    // void
-    // int createFile();
-    // int deleteFile();
-    // int getFile();
-    // int sendFile();
-    // int broadcast();
-    // void listDisk();
-};
-
-class FileHandler
-{
-public:
-private:
-    int createFile();
-    int deleteFile();
-    int getFile();
-};
-
-int main(int argc, char *argv[])
-{
-    /* podział prac
-    Waldek - UDP
-    Konrad - FileHandler - stworzenie zasobu, usunięcie go, przechowywanie w koneterze, zwrócenie wszystkich,
-    Michał - main.cpp / fredy - spawnowanie
-    Ja :D  - TCP send/recv 
-
-    todo cmake/make na ./include ./src
-    deadline 22.05
-    pisanie funkcji, tak, żeby dało się je wykorzystywać na wyższym poziomie (parent-module) essa
-    */
-
+int main(int argc, char *argv[]) {
+    Supervisor supervisor;
+    UI ui(&supervisor);
+    std::thread t1(&UI::run, std::ref(ui));
+    std::thread t2(&Supervisor::run, std::ref(supervisor));
+    t1.join();
+    supervisor.cleanUp();
+    t2.join();
     return 0;
 }
