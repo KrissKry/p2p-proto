@@ -6,7 +6,6 @@
 #include <vector>
 #include "UI.h"
 #include "utils.h"
-#include <cassert>
 
 UI::UI(Supervisor *supervisor): supervisor(supervisor) {
 

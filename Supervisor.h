@@ -15,9 +15,11 @@
 class Supervisor {
 private:
     std::atomic<bool> end;
+    ThreadManager * threadManager;
 
 public:
     Supervisor();
+    ~Supervisor();
     void run();
     void cleanUp();
 

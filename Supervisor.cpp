@@ -8,11 +8,14 @@
 Supervisor::Supervisor(): end(false) {
 //    filehandler = FileHandler();
 //    networkConnector = NetworkConnector();
+    threadManager = new ThreadManager();
 }
+
+Supervisor::~Supervisor() { delete threadManager; }
 
 void Supervisor::run() {
     // start network connector
-
+    threadManager->createThread(std::thread(&Supervisor::listDisk, this));
     int i;
     while(!end) {
         {
@@ -65,9 +68,13 @@ int Supervisor::deleteFile(const std::string& name) {
 }
 
 std::vector<Resource> Supervisor::listDisk() {
-//    return fileHandler->listDisk();
+    std::cout<<"a"<<std::endl;
+    std::chrono::seconds dura( 5);
+    std::this_thread::sleep_for( dura );
+    //    return fileHandler->listDisk();
 }
 
 void Supervisor::cleanUp() {
     end = true;
+    threadManager->cleanUp();
 }
