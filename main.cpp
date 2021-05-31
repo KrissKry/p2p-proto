@@ -1,40 +1,5 @@
 #include "Supervisor.h"
-
-class NetworkComponent {
-public:
-    NetworkComponent();
-
-    ~NetworkComponent();
-
-private:
-};
-
-class UI {
-public:
-    UI();
-
-    ~UI();
-
-private:
-    void listOptions();
-    // void
-    // int createFile();
-    // int deleteFile();
-    // int getFile();
-    // int sendFile();
-    // int broadcast();
-    // void listDisk();
-};
-
-class FileHandler {
-public:
-private:
-    int createFile();
-
-    int deleteFile();
-
-    int getFile();
-};
+#include "UI.h"
 
 //void independentThread() {
 //    safeOutput("Start thread");
@@ -49,6 +14,11 @@ private:
 
 int main(int argc, char *argv[]) {
     Supervisor supervisor;
-    supervisor.start();
+    UI ui(&supervisor);
+    std::thread t1(&UI::run, std::ref(ui));
+    std::thread t2(&Supervisor::run, std::ref(supervisor));
+    t1.join();
+    supervisor.cleanUp();
+    t2.join();
     return 0;
 }

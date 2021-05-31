@@ -9,19 +9,6 @@
 #include <iostream>
 #include <vector>
 
-void safeOutput(const std::string &str, std::mutex &m) {
-    m.lock();
-    std::cout << str << std::endl << std::flush;
-    m.unlock();
-}
-
-char * safeInput(char *command, int max_length, std::mutex &m) {
-    m.lock();
-    std::cin.getline(command, max_length);
-    m.unlock();
-    return command;
-}
-
 std::vector<std::string> splitStringOnSpace(const std::string &s) {
     std::string temp;
     std::vector<std::string> v;

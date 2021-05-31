@@ -2,63 +2,72 @@
 // Created by Michal Wiszenko on 30/05/2021.
 //
 
-#include <string>
-#include <vector>
-#include "utils.h"
+#include <iostream>
 #include "Supervisor.h"
 
-Supervisor::Supervisor() {
+Supervisor::Supervisor(): end(false) {
 //    filehandler = FileHandler();
 //    networkConnector = NetworkConnector();
 }
 
-void Supervisor::func() {
-    safeOutput("abc", cmd_tx);
-}
-
-void Supervisor::start() {
-    safeOutput("Session started", cmd_tx);
-
+void Supervisor::run() {
     // start network connector
 
-    char command[MAX_COMMAND_LENGTH];
-    while (parseCommand(command));
+    int i;
+    while(!end) {
+        {
+            std::lock_guard<std::mutex> lock(incoming_tx);
+            if (!incoming.empty()) {
+                i = incoming.front();
+                incoming.pop_front();
+                std::cout<<i<<std::endl;
+            }
+        }
+    }
 }
 
-bool Supervisor::parseCommand(char *command) {
-    safeInput(command, MAX_COMMAND_LENGTH, cmd_tx);
-    std::string str(command);
-    std::vector<std::string> tokenList = splitStringOnSpace(str);
+void Supervisor::createFile(Resource res) {
+//    fileHandler->createFile(res);
+}
 
-    if(tokenList.size() == 1 && tokenList[0] == "quit") {
-        return false;
-    } else if (tokenList.size() == 4 && tokenList[0] == "upload" && tokenList[2] == "as") {
-//        Resource resource = FileHandler.create(tokenList[1], tokenList[3], ip?);
-//        if(resource != null) {
-//            NetworkConnector.upload(resource);
-//        } else {
-//            safeOutput("Error", cmd_tx);
-//        }
-    } else if (tokenList.size() == 2 && tokenList[0] == "download") {
-//        Resource resource = FileHandler.create(tokenList[1], tokenList[3], ip?);
-//        if(resource != null) {
-//            NetworkConnector.download(resource);
-//        } else {
-//            safeOutput("Error", cmd_tx);
-//        }
-    } else if (tokenList.size() == 2 && tokenList[0] == "delete") {
-//        Resource resource = FileHandler.remove(tokenList[1], ip?);
-//        if(resource != null) {
-//            NetworkConnector.remove(resource);
-//        } else {
-//            safeOutput("Error", cmd_tx);
-//        }    } else if (tokenList.size() == 2 && tokenList[0] == "list" && tokenList[1] == "disk") {
-//        std::vector<Resource> resources = FileHandler.listDisk();
-//        for(Resource res: resources) {
-//            safeOutput(res.resourceHeader.name, cmd_tx);
-//        }
-    } else {
-        safeOutput("Invalid command", cmd_tx);
-    }
-    return true;
+void Supervisor::deleteFile(ResourceHeader resHeader) {
+//    fileHandler->deleteFile(resHeader);
+}
+
+int Supervisor::createFile(const std::string& path, const std::string& name) {
+//    Resource* res = fileHandler->createFile(path, name);
+//    if(res != nullptr) {
+//        std::lock_guard<std::mutex> lock(outgoing_tx);
+//        outgoing.push_back(1);
+//        return 0;
+//    }
+    return -1;
+}
+
+int Supervisor::downloadFile(const std::string& name) {
+//    Resource* res = fileHandler->getFile(name);
+//    if(res != nullptr) {
+//        std::lock_guard<std::mutex> lock(outgoing_tx);
+//        outgoing.push_back(2);
+//        return 0;
+//    }
+    return -1;
+}
+
+int Supervisor::deleteFile(const std::string& name) {
+//    Resource* res = fileHandler->deleteFile(name);
+//    if(res != nullptr) {
+//        std::lock_guard<std::mutex> lock(outgoing_tx);
+//        outgoing.push_back(3);
+//        return 0;
+//    }
+    return -1;
+}
+
+std::vector<Resource> Supervisor::listDisk() {
+//    return fileHandler->listDisk();
+}
+
+void Supervisor::cleanUp() {
+    end = true;
 }
