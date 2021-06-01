@@ -9,6 +9,7 @@ Supervisor::Supervisor(): end(false) {
 //    filehandler = FileHandler();
 //    networkConnector = NetworkConnector();
     threadManager = new ThreadManager();
+    network_handler = new NetworkHandler(tcp_upflow, tcp_downflow, udp_upflow, udp_downflow);
 }
 
 Supervisor::~Supervisor() { delete threadManager; }

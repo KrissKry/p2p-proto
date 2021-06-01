@@ -5,15 +5,27 @@
 
 #include "Resource.h"
 #include "TCPConnector.h"
+#include "SyncedDeque.h"
 
 class NetworkHandler {
 
 
     public:
 
-        NetworkHandler() {
- 
-            createNewTCPServer();
+        NetworkHandler(
+            SyncedDeque<std::pair<int, ProtoPacket >>& tcp_up,
+            SyncedDeque<std::pair<int, ProtoPacket >>& tcp_down,
+            SyncedDeque< ProtoPacket >& udp_up,
+            SyncedDeque< ProtoPacket >& udp_down
+        ): 
+            tcp_upflow(tcp_up), 
+            tcp_downflow(tcp_down),
+            udp_upflow(udp_up),
+            udp_downflow(udp_down) 
+            {
+            
+                createNewTCPServer();
+
         }
         ~NetworkHandler() {}
 
@@ -33,8 +45,8 @@ class NetworkHandler {
                 if ( (fd_sock = server_ref.first->serverAccept() ) ) {
 
                     //nowy watek do obsłużenia połączenia bez blokowania następnych połączeń
-                    std::thread thread(runTcpThread(fd_sock));
-                    network_threads.push_back(thread);                    
+                    // std::thread thread(runTcpThread(fd_sock));
+                    // network_threads.push_back(thread);                    
                 }
             }
 
@@ -42,10 +54,13 @@ class NetworkHandler {
                 t.join();
 
             network_threads.clear();
+            return 0;
         }
 
         void setupUDP() {}
-        int runUdpThread() {}
+        int runUdpThread() {
+            return 0;
+        }
         void createThread() {}
 
 
@@ -60,6 +75,7 @@ class NetworkHandler {
 
             // Schemat działania UDP:
             // ?
+            return 0;
         }
 
 
@@ -69,11 +85,13 @@ class NetworkHandler {
         std::mutex deque_lock;
 
 
-        std::deque< std::pair< std::shared_ptr<TCPConnector>, sockaddr_in > > tcp_connections; 
-        //nwm czy tu pary nie zmienic na TCPConnecor, socket> bo sockety trzeba też zamykać, a sockaddrin i tak jest przekazywany do connectora
-        
-        int server_socket;
-        int bind_status;
+        std::deque< std::pair< std::shared_ptr<TCPConnector>, int > > tcp_connections; 
+
+        SyncedDeque< std::pair<int, ProtoPacket >>& tcp_downflow;
+        SyncedDeque< std::pair<int, ProtoPacket >>& tcp_upflow;
+        SyncedDeque< ProtoPacket >& udp_downflow; 
+        SyncedDeque< ProtoPacket >& udp_upflow;
+
 
 
         bool tcp_server_running = false;
@@ -82,6 +100,7 @@ class NetworkHandler {
         int createNewTCPServer() {
 
             //create server socket
+            int server_socket, bind_status;
             if ( (server_socket = socket(AF_INET, SOCK_STREAM, 0)) < 0 ) {
                 std::cout << "[ERR] " << strerror(errno);
                 return -1;
@@ -106,7 +125,7 @@ class NetworkHandler {
 
             //store information on the connection in deque
             std::lock_guard<std::mutex> lock(deque_lock);
-            tcp_connections.push_front( std::make_pair(server_ptr, in_addr) );
+            tcp_connections.push_front( std::make_pair(server_ptr, server_socket) );
 
             //listen to the sound of silence
             if ( tcp_connections.at(0).first->serverListen() < 0 ) 
