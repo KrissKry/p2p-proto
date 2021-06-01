@@ -9,17 +9,13 @@
 #include <arpa/inet.h>
 #include <cstring>
 #include <string>
-#include <unistd.h> //sleep
+#include "Resource.h"
 class UDPClient
 {
 public:
-    void greet()
+    void broadcast(ProtoPacket protoPacket)
     {
-        std::cout << "GREETINGS" << std::endl;
-    }
-    void broadcast(const char *data)
-    {
-        const char *message = data;
+        // const char *message = data;
 
         //create udp socket
         int socketDesc = socket(AF_INET, SOCK_DGRAM, 0);
@@ -49,7 +45,7 @@ public:
         addr.sin_port = htons(10000);
 
         //sending data
-        int feed = sendto(socketDesc, message, strlen(message), 0, (struct sockaddr *)&addr, sizeof(addr));
+        int feed = sendto(socketDesc, &protoPacket, sizeof(protoPacket), 0, (struct sockaddr *)&addr, sizeof(addr));
 
         if (feed < 0)
         {
@@ -84,6 +80,7 @@ public:
         while (1)
         {
             char messageBuffer[1024];
+            ProtoPacket protoPacket;
             fd_set readfds;
             struct sockaddr_in clientAddr;
             socklen_t addrLen = sizeof(clientAddr);
@@ -96,11 +93,15 @@ public:
             {
                 if (FD_ISSET(socketDesc, &readfds))
                 {
-                    int receivedBytes = recvfrom(socketDesc, messageBuffer, sizeof(messageBuffer), 0, (struct sockaddr *)&clientAddr, &addrLen);
+                    int receivedBytes = recvfrom(socketDesc, &protoPacket, sizeof(protoPacket), 0, (struct sockaddr *)&clientAddr, &addrLen);
 
                     if (receivedBytes > 0)
                     {
-                        std::cout << messageBuffer << std::endl;
+
+                        std::cout << protoPacket.command << std::endl;
+                        std::cout << protoPacket.header.name << std::endl;
+                        std::cout << protoPacket.header.size << std::endl;
+                        std::cout << "header size: " << sizeof(protoPacket.header) << " " << sizeof(protoPacket) << std::endl;
                     }
                 }
             }
