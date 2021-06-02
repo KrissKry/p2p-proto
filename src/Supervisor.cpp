@@ -6,8 +6,8 @@
 #include <thread>
 #include "../include/Supervisor.h"
 
-Supervisor::Supervisor(): end(false) {
-    filehandler = FileHandler();
+Supervisor::Supervisor() {
+    fileHandler = new FileHandler();
     network_handler = new NetworkHandler(tcp_upflow, tcp_downflow, udp_upflow, udp_downflow);
 }
 
@@ -23,18 +23,18 @@ void Supervisor::run() {
 }
 
 void Supervisor::tcpQueueListener() {
-    std::pair<int, ResourceHeader> message;
+    std::pair<int, ProtoPacket> message;
     while(shouldRun) {
         tcp_upflow.pop(message);
-        std::cout<<message.first<<std::endl;
+        std::cout<<message.second.command<<std::endl;
     }
 }
 
 void Supervisor::udpQueueListener() {
-    std::pair<char, ResourceHeader> message;
+    ProtoPacket message;
     while(shouldRun) {
         udp_upflow.pop(message);
-        std::cout<<message.first<<std::endl;
+        std::cout<<message.command<<std::endl;
     }
 }
 
@@ -47,11 +47,12 @@ void Supervisor::deleteFile(ResourceHeader resHeader) {
 }
 
 int Supervisor::createFile(const std::string& path, const std::string& name) {
-    int i = fileHandler->AddFile(path.c_str(), name.c_str(), "123");
+//    int i = fileHandler->AddFile(path.c_str(), name.c_str(), "123");
+    int i = 0;
     if(i == 0) {
-        ResourceHeader resourceHeader{};
-        const std::pair pair(1, resourceHeader);
-        udp_downflow.push(pair);
+        ProtoPacket packet{};
+        packet.command = 1;
+        udp_downflow.push(packet);
         return 0;
     }
     return -1;
