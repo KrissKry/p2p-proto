@@ -1,3 +1,6 @@
+#ifndef TIN_RESOURCE
+#define TIN_RESOURCE
+
 #include <stdint.h>
 #include <vector>
 
@@ -35,3 +38,6 @@ struct ProtoPacket
     struct ResourceHeader header;
     std::vector<unsigned char> data;
 };
+
+
+#endif

@@ -4,18 +4,22 @@
 
 #include "Resource.h"
 #include "TCPConnector.h"
-#include "UDPClient.h"
 #include "SyncedDeque.h"
 
 class NetworkHandler
 {
 
 public:
-    //communication
-    SyncedDeque<std::pair<char, ResourceHeader>> communicationUDPUp;
-    SyncedDeque<std::pair<char, ResourceHeader>> communicationUDPDown;
-    NetworkHandler()
+    NetworkHandler(
+        SyncedDeque<std::pair<int, ProtoPacket>> &tcp_up,
+        SyncedDeque<std::pair<int, ProtoPacket>> &tcp_down,
+        SyncedDeque<ProtoPacket> &udp_up,
+        SyncedDeque<ProtoPacket> &udp_down) : tcp_upflow(tcp_up),
+                                              tcp_downflow(tcp_down),
+                                              udp_upflow(udp_up),
+                                              udp_downflow(udp_down)
     {
+
         createNewTCPServer();
     }
     ~NetworkHandler() {}
@@ -37,8 +41,8 @@ public:
             {
 
                 //nowy watek do obsłużenia połączenia bez blokowania następnych połączeń
-                std::thread thread(runTcpThread(fd_sock));
-                network_threads.push_back(thread);
+                // std::thread thread(runTcpThread(fd_sock));
+                // network_threads.push_back(thread);
             }
         }
 
@@ -46,10 +50,14 @@ public:
             t.join();
 
         network_threads.clear();
+        return 0;
     }
 
     void setupUDP() {}
-    int runUdpThread() {}
+    int runUdpThread()
+    {
+        return 0;
+    }
     void createThread() {}
 
     //obsluga watku w zaleznosci od tego co jest wymagane
@@ -64,17 +72,19 @@ public:
 
         // Schemat działania UDP:
         // ?
+        return 0;
     }
 
 private:
     std::deque<std::thread> network_threads;
     std::mutex deque_lock;
 
-    std::deque<std::pair<std::shared_ptr<TCPConnector>, sockaddr_in>> tcp_connections;
-    //nwm czy tu pary nie zmienic na TCPConnecor, socket> bo sockety trzeba też zamykać, a sockaddrin i tak jest przekazywany do connectora
+    std::deque<std::pair<std::shared_ptr<TCPConnector>, int>> tcp_connections;
 
-    int server_socket;
-    int bind_status;
+    SyncedDeque<std::pair<int, ProtoPacket>> &tcp_downflow;
+    SyncedDeque<std::pair<int, ProtoPacket>> &tcp_upflow;
+    SyncedDeque<ProtoPacket> &udp_downflow;
+    SyncedDeque<ProtoPacket> &udp_upflow;
 
     bool tcp_server_running = false;
 
@@ -83,6 +93,7 @@ private:
     {
 
         //create server socket
+        int server_socket, bind_status;
         if ((server_socket = socket(AF_INET, SOCK_STREAM, 0)) < 0)
         {
             std::cout << "[ERR] " << strerror(errno);
@@ -108,7 +119,7 @@ private:
 
         //store information on the connection in deque
         std::lock_guard<std::mutex> lock(deque_lock);
-        tcp_connections.push_front(std::make_pair(server_ptr, in_addr));
+        tcp_connections.push_front(std::make_pair(server_ptr, server_socket));
 
         //listen to the sound of silence
         if (tcp_connections.at(0).first->serverListen() < 0)

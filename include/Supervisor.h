@@ -11,12 +11,20 @@
 #include <deque>
 #include <condition_variable>
 #include <atomic>
+#include "SyncedDeque.h"
+#include "NetworkHandler.h"
 
 class Supervisor {
 private:
     std::atomic<bool> end;
     ThreadManager * threadManager;
 
+    SyncedDeque< std::pair<int, ProtoPacket > > tcp_downflow;
+    SyncedDeque< std::pair<int, ProtoPacket > > tcp_upflow;
+    SyncedDeque< ProtoPacket > udp_downflow; 
+    SyncedDeque< ProtoPacket > udp_upflow;
+
+    NetworkHandler* network_handler;
 public:
     Supervisor();
     ~Supervisor();
@@ -29,6 +37,8 @@ public:
     std::mutex outgoing_tx;
 //    FileHandler fileHandler;
 //    NetworkConnector networkConnector;
+
+    
 
     int createFile(const std::string &path, const std::string &name);
     int downloadFile(const std::string &name);
