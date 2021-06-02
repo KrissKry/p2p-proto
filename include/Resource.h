@@ -1,3 +1,6 @@
+#ifndef RESOURCE_H
+#define RESOURCE_H
+
 #include <stdint.h>
 #include <vector>
 
@@ -35,3 +38,5 @@ struct ProtoPacket
     struct ResourceHeader header;
     std::vector<unsigned char> data;
 };
+
+#endif //RESOURCE_H

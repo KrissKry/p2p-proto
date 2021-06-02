@@ -17,5 +17,4 @@ add_executable(protocole
     main.cpp
     src/server.cpp
     src/Supervisor.cpp
-    src/ThreadManager.cpp
-    src/UI.cpp)   
+    src/UI.cpp include/SyncedDeque.h)

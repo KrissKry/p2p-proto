@@ -7,15 +7,18 @@
 
 #include <mutex>
 #include "Resource.h"
-#include "ThreadManager.h"
+#include "FileHandler.h"
+#include "SyncedDeque.h"
+//#include "NetworkHandler.h"
 #include <deque>
 #include <condition_variable>
 #include <atomic>
 
 class Supervisor {
 private:
-    std::atomic<bool> end;
-    ThreadManager * threadManager;
+    bool shouldRun = true;
+    FileHandler * fileHandler;
+//    NetworkHandler * networkHandler;
 
 public:
     Supervisor();
@@ -23,12 +26,10 @@ public:
     void run();
     void cleanUp();
 
-    std::deque<int> incoming;
-    std::deque<int> outgoing;
-    std::mutex incoming_tx;
-    std::mutex outgoing_tx;
-//    FileHandler fileHandler;
-//    NetworkConnector networkConnector;
+    SyncedDeque<std::pair<int, ResourceHeader>> incomingTcp;
+    SyncedDeque<std::pair<int, Resource>> outgoingTcp;
+    SyncedDeque<std::pair<char, ResourceHeader>> incomingUdp;
+    SyncedDeque<std::pair<char, ResourceHeader>> outgoingUdp;
 
     int createFile(const std::string &path, const std::string &name);
     int downloadFile(const std::string &name);
@@ -36,6 +37,10 @@ public:
     std::vector<Resource> listDisk();
     void createFile(Resource res);
     void deleteFile(ResourceHeader resHeader);
+
+    void tcpQueueListener();
+
+    void udpQueueListener();
 };
 
 
