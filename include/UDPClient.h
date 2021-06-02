@@ -55,7 +55,7 @@ public:
             perror("sendto");
         }
     }
-    void server(SyncedDeque<std::pair<char, ResourceHeader>> &communicationUDPUp)
+    void server(SyncedDeque<ProtoPacket> &udp_upflow)
     {
 
         //create udp socket
@@ -104,7 +104,7 @@ public:
                         std::cout << protoPacket.header.name << std::endl;
                         std::cout << protoPacket.header.size << std::endl;
                         std::cout << "header size: " << sizeof(protoPacket.header) << " " << sizeof(protoPacket) << std::endl;
-                        communicationUDPUp.push(std::pair<char, ResourceHeader>(protoPacket.command, protoPacket.header));
+                        udp_upflow.push(protoPacket);
                     }
                 }
             }
