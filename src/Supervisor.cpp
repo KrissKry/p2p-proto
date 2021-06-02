@@ -47,8 +47,8 @@ void Supervisor::deleteFile(ResourceHeader resHeader) {
 }
 
 int Supervisor::createFile(const std::string& path, const std::string& name) {
-    int i = fileHandler->AddFile(path.c_str(), name.c_str(), "123");
-    if(i == 0) {
+    int res = fileHandler->AddFile(path.c_str(), name.c_str(), "123");
+    if(res == 0) {
         ProtoPacket packet{};
         packet.command = 1;
         udp_downflow.push(packet);
@@ -58,22 +58,26 @@ int Supervisor::createFile(const std::string& path, const std::string& name) {
 }
 
 int Supervisor::downloadFile(const std::string& name) {
-//    Resource* res = fileHandler->getFile(name);
-//    if(res != nullptr) {
-//        std::lock_guard<std::mutex> lock(outgoing_tx);
-//        outgoing.push_back(2);
+//    int res = fileHandler->getFile(name);
+//    if(res == 0) {
+//        ProtoPacket packet{};
+//        packet.command = 3;
+//        tcp_downflow.push(packet);
 //        return 0;
 //    }
-    return -1;
+//    return -1;
 }
 
 int Supervisor::deleteFile(const std::string& name) {
-//    Resource* res = fileHandler->deleteFile(name);
-//    if(res != nullptr) {
-//        std::lock_guard<std::mutex> lock(outgoing_tx);
-//        outgoing.push_back(3);
-//        return 0;
-//    }
+    ResourceHeader header{};
+    strcpy(header.name, name.c_str());
+    int res = fileHandler->deleteownFile(header);
+    if(res == 0) {
+        ProtoPacket packet{};
+        packet.command = 2;
+        udp_downflow.push(packet);
+        return 0;
+    }
     return -1;
 }
 

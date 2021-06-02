@@ -33,7 +33,7 @@ public:
 		//sprawdzenie czy nie ma pliku o takiej samej nazwie
 		for (it = OwnFileList.begin(); it != OwnFileList.end(); it++)
 		{
-			if (strcmp(it->header.name, name))
+			if (strcmp(it->header.name, name) == 0)
 				return 1;
 		}
 
@@ -55,7 +55,7 @@ public:
 
 		OwnFileList.push_back(res);
 		NetFileList.push_back(res.header);
-		return 1;
+		return 0;
 	}
 
 	int createFile(Resource resource, const char* ip)
@@ -68,7 +68,7 @@ public:
 		//sprawdzenie czy nie ma pliku o takiej samej nazwie
 		for (it = OwnFileList.begin(); it != OwnFileList.end(); it++)
 		{
-			if (strcmp(it->header.name, resource.header.name))
+			if (strcmp(it->header.name, resource.header.name) == 0)
 				return 1;
 		}
 
@@ -93,9 +93,9 @@ public:
 		std::vector <Resource>::iterator it;
 		for (it = OwnFileList.begin(); it != OwnFileList.end(); it++)
 		{
-			if (strcmp(it->header.name, rh.name))
+			if (strcmp(it->header.name, rh.name) == 0)
 			{
-				if (remove(rh.name) != 0)
+                if (remove(rh.name) != 0)
 					return 1;
 				OwnFileList.erase(it);
 				deleteFromNetList(rh);
@@ -112,7 +112,7 @@ public:
 		std::vector <ResourceHeader>::iterator it;
 		for (it = NetFileList.begin(); it != NetFileList.end(); it++)
 		{
-			if (strcmp(it->name, rh.name))
+			if (strcmp(it->name, rh.name) == 0)
 			{
 				NetFileList.erase(it);
 				return 0;
