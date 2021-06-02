@@ -21,8 +21,6 @@ public:
                                               udp_upflow(udp_up),
                                               udp_downflow(udp_down)
     {
-
-        createNewTCPServer();
     }
     ~NetworkHandler() {}
 
@@ -138,22 +136,6 @@ public:
             return 0;
         }
 
-private:
-    std::deque<std::shared_ptr<std::thread>> network_threads;
-    std::mutex deque_lock;
-
-    std::deque<std::pair<std::shared_ptr<TCPConnector>, int>> tcp_connections;
-
-    UDPClient udpClient;
-
-    SyncedDeque<std::pair<int, ProtoPacket>> &tcp_downflow;
-    SyncedDeque<std::pair<int, ProtoPacket>> &tcp_upflow;
-    SyncedDeque<ProtoPacket> &udp_downflow;
-    SyncedDeque<ProtoPacket> &udp_upflow;
-
-    bool tcp_server_running = false;
-
-
     //only once at the beginning!!
     int createNewTCPServer() {
 
@@ -194,6 +176,21 @@ private:
         //return server connection index
         return 0;
     }
+
+private:
+    std::deque<std::shared_ptr<std::thread>> network_threads;
+    std::mutex deque_lock;
+
+    std::deque<std::pair<std::shared_ptr<TCPConnector>, int>> tcp_connections;
+
+    UDPClient udpClient;
+
+    SyncedDeque<std::pair<int, ProtoPacket>> &tcp_downflow;
+    SyncedDeque<std::pair<int, ProtoPacket>> &tcp_upflow;
+    SyncedDeque<ProtoPacket> &udp_downflow;
+    SyncedDeque<ProtoPacket> &udp_upflow;
+
+    bool tcp_server_running = false;
 
     int spawnClient(ProtoPacket& packet, int client_socket) {
         unsigned short dest_port = 8080;

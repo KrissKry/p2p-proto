@@ -9,6 +9,7 @@
 #include <arpa/inet.h>
 #include <cstring>
 #include <string>
+#include <sys/select.h>
 #include "Resource.h"
 #include "SyncedDeque.h"
 

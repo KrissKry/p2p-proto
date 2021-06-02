@@ -18,6 +18,15 @@ void Supervisor::run() {
     std::thread tcpQueueListener(&Supervisor::tcpQueueListener, this);
     std::thread udpQueueListener(&Supervisor::udpQueueListener, this);
 
+    int res = network_handler->createNewTCPServer();
+    if(res == 0) {
+        std::thread tcpServer(&NetworkHandler::handleTCPServer, network_handler, 0);
+        tcpServer.detach();
+    }
+
+    std::thread udpServer(&NetworkHandler::udpServerRun, network_handler);
+    udpServer.detach();
+
     tcpQueueListener.join();
     udpQueueListener.join();
 }
