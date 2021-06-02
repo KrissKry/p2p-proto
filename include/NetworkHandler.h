@@ -16,7 +16,6 @@ public:
     SyncedDeque<std::pair<char, ResourceHeader>> communicationUDPDown;
     NetworkHandler()
     {
-
         createNewTCPServer();
     }
     ~NetworkHandler() {}

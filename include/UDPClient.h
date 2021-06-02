@@ -10,6 +10,8 @@
 #include <cstring>
 #include <string>
 #include "Resource.h"
+#include "SyncedDeque.h"
+
 class UDPClient
 {
 public:
@@ -53,7 +55,7 @@ public:
             perror("sendto");
         }
     }
-    void serwer()
+    void server(SyncedDeque<std::pair<char, ResourceHeader>> &communicationUDPUp)
     {
 
         //create udp socket
@@ -102,6 +104,7 @@ public:
                         std::cout << protoPacket.header.name << std::endl;
                         std::cout << protoPacket.header.size << std::endl;
                         std::cout << "header size: " << sizeof(protoPacket.header) << " " << sizeof(protoPacket) << std::endl;
+                        communicationUDPUp.push(std::pair<char, ResourceHeader>(protoPacket.command, protoPacket.header));
                     }
                 }
             }
