@@ -47,8 +47,7 @@ void Supervisor::deleteFile(ResourceHeader resHeader) {
 }
 
 int Supervisor::createFile(const std::string& path, const std::string& name) {
-//    int i = fileHandler->AddFile(path.c_str(), name.c_str(), "123");
-    int i = 0;
+    int i = fileHandler->AddFile(path.c_str(), name.c_str(), "123");
     if(i == 0) {
         ProtoPacket packet{};
         packet.command = 1;

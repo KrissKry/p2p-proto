@@ -16,7 +16,7 @@ private:
 public:
 
 
-	int AddFile(char* path,char* name, char *ip)
+	int AddFile(const char* path, const char* name, const char *ip)
 	{
 
 		std::vector <Resource>::iterator it;
@@ -58,7 +58,7 @@ public:
 		return 1;
 	}
 
-	int createFile(Resource resource, char* ip)
+	int createFile(Resource resource, const char* ip)
 	{
 
 		std::vector <Resource>::iterator it;
@@ -122,7 +122,7 @@ public:
 		return 1;
 	}
 
-	int NewFileInfo(ResourceHeader rh, char* ip)
+	int NewFileInfo(ResourceHeader rh, const char* ip)
 	{
 		NetFileList.push_back(rh);
 		return 0;
