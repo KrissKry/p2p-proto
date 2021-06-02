@@ -1,9 +1,11 @@
 #include <deque>
 #include <thread>
 #include <mutex>
+#include <functional>
 
 #include "Resource.h"
 #include "TCPConnector.h"
+#include "UDPClient.h"
 #include "SyncedDeque.h"
 
 class NetworkHandler
@@ -41,19 +43,25 @@ public:
             {
 
                 //nowy watek do obsłużenia połączenia bez blokowania następnych połączeń
-                // std::thread thread(runTcpThread(fd_sock));
-                // network_threads.push_back(thread);
+                // std::shared_ptr< std::thread > ptr (new spawn(fd_sock));
+                // auto ptr = std::make_shared<std::thread>(new spawn(fd_sock));
+                // auto ptr = std::make_shared<std::thread>(new std::thread(&NetworkHandler::runTcpThread, this, fd_sock));
+                auto ptr = std::make_shared<std::thread>(std::bind(&NetworkHandler::runTCPServerThread, this, fd_sock));
+                network_threads.push_back(std::move(ptr));
             }
         }
 
         for (auto &t : network_threads)
-            t.join();
+            t->join();
 
         network_threads.clear();
         return 0;
     }
 
-    void setupUDP() {}
+    void udpServerRun()
+    {
+        udpClient.server(udp_upflow);
+    }
     int runUdpThread()
     {
         return 0;
@@ -61,7 +69,7 @@ public:
     void createThread() {}
 
     //obsluga watku w zaleznosci od tego co jest wymagane
-    int runTcpThread(int socket)
+    int runTCPServerThread(int socket)
     {
         // Schemat działania TCP:
         //1. odczytanie komunikatu wejsciowego (np żądanie zasobu po tcp)
@@ -70,16 +78,55 @@ public:
         //4. przekazanie zasobu do tcp -> wysłanie nagłówka, a potem danych
         //5. zamknięcie socketu po wysłaniu wszystkiego
 
-        // Schemat działania UDP:
-        // ?
+        ProtoPacket packet;
+        auto pair = std::make_pair(socket, packet);
+
+        // read resource request and command
+        std::cout << "packet vector size: " << packet.data.size() << "\n";
+        if (tcp_connections.at(0).first->receiveData(static_cast<void *>(&packet), sizeof(packet.header) + 1) < 0)
+            return -1; //zwroc error jakis cos
+
+        //send request for a file
+        tcp_upflow.push(pair);
+
+        //wait for response for our socket
+        while (tcp_downflow.pop(pair) < 0)
+        {
+        }
+
+        std::cout << "Got packet with resource name: " << packet.header.name << "\n";
+        std::cout << "packet vector size: " << packet.data.size() << "\n";
+
+        //send packet header
+        if (tcp_connections.at(0).first->sendData(socket, static_cast<void *>(&packet.header), sizeof(packet.header)) < 0)
+            return -1;
+
+        //send packet data
+        if (tcp_connections.at(0).first->sendData(socket, static_cast<void *>(&packet.data[0]), packet.data.size()) < 0)
+            return -1;
+
+        // close(socket);
         return 0;
     }
 
+    // int runTCPClientThread( ) {
+    //     int client_socket;
+
+    //     if ( (client_socket = openNewSocket()) < 0) {
+    //         std::cout << "[ERR] " << strerror(errno);
+    //         return -1;
+    //     }
+
+    //     return 0;
+    // }
+
 private:
-    std::deque<std::thread> network_threads;
+    std::deque<std::shared_ptr<std::thread>> network_threads;
     std::mutex deque_lock;
 
     std::deque<std::pair<std::shared_ptr<TCPConnector>, int>> tcp_connections;
+
+    UDPClient udpClient;
 
     SyncedDeque<std::pair<int, ProtoPacket>> &tcp_downflow;
     SyncedDeque<std::pair<int, ProtoPacket>> &tcp_upflow;
@@ -94,7 +141,7 @@ private:
 
         //create server socket
         int server_socket, bind_status;
-        if ((server_socket = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+        if ((server_socket = openNewSocket()) < 0)
         {
             std::cout << "[ERR] " << strerror(errno);
             return -1;
@@ -129,5 +176,10 @@ private:
 
         //return server connection index
         return 0;
+    }
+
+    int openNewSocket()
+    {
+        return socket(AF_INET, SOCK_STREAM, 0);
     }
 };
