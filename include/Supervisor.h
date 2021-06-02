@@ -38,8 +38,16 @@ public:
     int downloadFile(const std::string &name);
     int deleteFile(const std::string &name);
     std::vector<Resource> listDisk();
-    void createFile(Resource &res);
-    void deleteFile(ResourceHeader resHeader);
+    void createFile(ResourceHeader header);
+    void deleteFile(ResourceHeader header);
+
+    void broadcastCreate(ResourceHeader resourceHeader);
+
+    void broadcastDelete(ResourceHeader resourceHeader);
+
+    void broadcastGetInfo(ResourceHeader resourceHeader);
+
+    void getInfo();
 };
 
 
