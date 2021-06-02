@@ -1,5 +1,5 @@
-#ifndef RESOURCE_H
-#define RESOURCE_H
+#ifndef TIN_RESOURCE
+#define TIN_RESOURCE
 
 #include <stdint.h>
 #include <vector>
@@ -39,4 +39,4 @@ struct ProtoPacket
     std::vector<unsigned char> data;
 };
 
-#endif //RESOURCE_H
+#endif

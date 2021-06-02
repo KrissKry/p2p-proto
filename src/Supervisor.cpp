@@ -6,9 +6,9 @@
 #include <thread>
 #include "../include/Supervisor.h"
 
-Supervisor::Supervisor() {
-    fileHandler = new FileHandler();
-//    networkHandler = new NetworkHandler();
+Supervisor::Supervisor(): end(false) {
+    filehandler = FileHandler();
+    network_handler = new NetworkHandler(tcp_upflow, tcp_downflow, udp_upflow, udp_downflow);
 }
 
 Supervisor::~Supervisor() { delete fileHandler; }
@@ -25,7 +25,7 @@ void Supervisor::run() {
 void Supervisor::tcpQueueListener() {
     std::pair<int, ResourceHeader> message;
     while(shouldRun) {
-        incomingTcp.pop(message);
+        tcp_upflow.pop(message);
         std::cout<<message.first<<std::endl;
     }
 }
@@ -33,7 +33,7 @@ void Supervisor::tcpQueueListener() {
 void Supervisor::udpQueueListener() {
     std::pair<char, ResourceHeader> message;
     while(shouldRun) {
-        incomingUdp.pop(message);
+        udp_upflow.pop(message);
         std::cout<<message.first<<std::endl;
     }
 }
@@ -51,7 +51,7 @@ int Supervisor::createFile(const std::string& path, const std::string& name) {
     if(i == 0) {
         ResourceHeader resourceHeader{};
         const std::pair pair(1, resourceHeader);
-        outgoingUdp.push(pair);
+        udp_downflow.push(pair);
         return 0;
     }
     return -1;

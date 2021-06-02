@@ -13,6 +13,8 @@
 #include <deque>
 #include <condition_variable>
 #include <atomic>
+#include "SyncedDeque.h"
+#include "NetworkHandler.h"
 
 class Supervisor {
 private:
@@ -20,6 +22,12 @@ private:
     FileHandler * fileHandler;
 //    NetworkHandler * networkHandler;
 
+    SyncedDeque< std::pair<int, ProtoPacket > > tcp_downflow;
+    SyncedDeque< std::pair<int, ProtoPacket > > tcp_upflow;
+    SyncedDeque< ProtoPacket > udp_downflow; 
+    SyncedDeque< ProtoPacket > udp_upflow;
+
+    NetworkHandler* network_handler;
 public:
     Supervisor();
     ~Supervisor();
@@ -30,6 +38,8 @@ public:
     SyncedDeque<std::pair<int, Resource>> outgoingTcp;
     SyncedDeque<std::pair<char, ResourceHeader>> incomingUdp;
     SyncedDeque<std::pair<char, ResourceHeader>> outgoingUdp;
+
+    
 
     int createFile(const std::string &path, const std::string &name);
     int downloadFile(const std::string &name);
