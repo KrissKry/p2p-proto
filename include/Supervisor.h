@@ -38,7 +38,7 @@ public:
     int downloadFile(const std::string &name);
     int deleteFile(const std::string &name);
     std::vector<Resource> listDisk();
-    void createFile(Resource res);
+    void createFile(Resource &res);
     void deleteFile(ResourceHeader resHeader);
 };
 

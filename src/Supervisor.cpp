@@ -38,12 +38,12 @@ void Supervisor::udpQueueListener() {
     }
 }
 
-void Supervisor::createFile(Resource res) {
-//    fileHandler->createFile(res);
+void Supervisor::createFile(Resource &res) {
+    fileHandler->createFile(res, "123");
 }
 
 void Supervisor::deleteFile(ResourceHeader resHeader) {
-//    fileHandler->deleteFile(resHeader);
+    fileHandler->deleteownFile(resHeader);
 }
 
 int Supervisor::createFile(const std::string& path, const std::string& name) {
@@ -65,7 +65,7 @@ int Supervisor::downloadFile(const std::string& name) {
 //        tcp_downflow.push(packet);
 //        return 0;
 //    }
-//    return -1;
+//    return -1;gh
 }
 
 int Supervisor::deleteFile(const std::string& name) {
