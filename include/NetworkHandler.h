@@ -105,16 +105,34 @@ class NetworkHandler {
             return 0;
         }
 
-        // int runTCPClientThread( ) {
-        //     int client_socket;
+        int runTCPClientThread( ProtoPacket& packet ) {
+            int client_socket;
 
-        //     if ( (client_socket = openNewSocket()) < 0) {
-        //         std::cout << "[ERR] " << strerror(errno);
-        //         return -1;
-        //     }
+            if ( (client_socket = openNewSocket()) < 0) {
+                std::cout << "[ERR] " << strerror(errno);
+                return -1;
+            }
+            int client_index = spawnClient(packet, client_socket);
 
-        //     return 0;
-        // }
+            //send command and header
+            if( tcp_connections.at(client_index).first->sendData(client_socket, static_cast<void *>(&packet), sizeof(packet.header) + 1) < 0)
+                return -1;
+
+            //receive header
+            if (tcp_connections.at(client_index).first->receiveData(static_cast<void *>(&packet.header), sizeof(packet.header)) < 0 )
+                return -1;
+
+            //resize data accordingly
+            packet.data.resize(packet.header.size);
+            //receive data
+            if ( tcp_connections.at(client_index).first->receiveData(static_cast<void *>(&packet.data[0]), packet.data.size()) < 0 )
+                return -1;
+
+            // tcp_upflow.push(std::make_pair(client_socket, packet)) 
+            //niepotrzebne bo mamy pakiet przez refke przekazany i zakladamy ze resource jest przekazany do pakietu przez refke tez?
+
+            return 0;
+        }
 
 
     private:
@@ -162,7 +180,7 @@ class NetworkHandler {
 
             //store information on the connection in deque
             std::lock_guard<std::mutex> lock(deque_lock);
-            tcp_connections.push_front( std::make_pair(server_ptr, server_socket) );
+            tcp_connections.push_front( std::make_pair(std::move(server_ptr), server_socket) );
 
             //listen to the sound of silence
             if ( tcp_connections.at(0).first->serverListen() < 0 ) 
@@ -177,6 +195,19 @@ class NetworkHandler {
 
         int openNewSocket() {
             return socket(AF_INET, SOCK_STREAM, 0);
+        }
+
+        int spawnClient(ProtoPacket& packet, int client_socket) {
+            unsigned short dest_port = 8080;
+
+            auto client_ptr = std::shared_ptr<TCPConnector>(new TCPConnector(client_socket, dest_port, packet.header.uuid));
+
+            std::lock_guard<std::mutex> lock(deque_lock);
+
+            tcp_connections.push_back( std::make_pair(std::move(client_ptr), client_socket) );
+
+            return tcp_connections.size() - 1;
+
         }
 
 };
