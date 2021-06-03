@@ -160,10 +160,16 @@ public:
 		return false;
 	}
 
-	int NewFileInfo(ResourceHeader rh, const char* ip)
+	ResourceHeader NewFileInfo(const char * name)
 	{
-		NetFileList.push_back(rh);
-		return 0;
+		for (auto it = NetFileList.begin(); it != NetFileList.end(); it++)
+		{
+			if (strcmp(it->name, name) == 0)
+			{
+				return *it;
+
+			}
+		}
 
 	}
 
