@@ -1,13 +1,13 @@
 #ifndef TIN_FileHandler
 #define TIN_FileHandler
 
-#include<stdio.h> 
+#include<cstdio>
 #include<vector>
 #include<iostream>
 #include<chrono>
 #include<fstream>
 #include "Resource.h"
-#include <string.h>
+#include <cstring>
 
 class FileHandler {
 private:
@@ -25,9 +25,9 @@ public:
 
 
 		//sprawdzenie czy nie ma pliku o takiej samej nazwie
-		for (auto it = OwnFileList.begin(); it != OwnFileList.end(); it++)
+		for (auto & it : OwnFileList)
 		{
-			if (strcmp(it->header.name, name) == 0)
+			if (strcmp(it.header.name, name) == 0)
 				return 1;
 		}
 
@@ -61,9 +61,9 @@ public:
 
 
 		//sprawdzenie czy nie ma pliku o takiej samej nazwie
-		for (auto it = OwnFileList.begin(); it != OwnFileList.end(); it++)
+		for (auto & it : OwnFileList)
 		{
-			if (strcmp(it->header.name, resource.header.name) == 0)
+			if (strcmp(it.header.name, resource.header.name) == 0)
 				return 1;
 		}
 
@@ -71,9 +71,9 @@ public:
 		file.open(resource.header.name);
 		if (file.is_open())
 		{
-			for (int i = 0; i < resource.data.size(); i++)
+			for (unsigned char i : resource.data)
 			{
-				file << resource.data[i];
+				file << i;
 			}
 		}
 		file.close();
@@ -83,21 +83,21 @@ public:
 		return 1;
 	}
 
-	// metoda nie jest bezpieczna ale jeœli wybieramy z listy to whatever
+	// metoda nie jest bezpieczna ale jeï¿½li wybieramy z listy to whatever
 	Resource getFile(const char * name)
 	{
-		for (auto it = OwnFileList.begin(); it != OwnFileList.end(); it++)
+		for (auto & it : OwnFileList)
 		{
-			if (strcmp(it->header.name, name) == 0)
+			if (strcmp(it.header.name, name) == 0)
 			{
-				return *it;
+				return it;
 
 			}
 		}
 
 	}
 
-	//metoda do usuwania dla twórcy pliku od razu usuwa z dwóch list
+	//metoda do usuwania dla twï¿½rcy pliku od razu usuwa z dwï¿½ch list
 	int deleteOwnFile(ResourceHeader rh)
 	{
 		std::vector <Resource>::iterator it;
@@ -117,7 +117,7 @@ public:
 
 	}
 
-	// metoda do usuwania pliku jeœli nie jesteœmy twórc¹ a mamy go na swoim dysku
+	// metoda do usuwania pliku jeï¿½li nie jesteï¿½my twï¿½rcï¿½ a mamy go na swoim dysku
 	int deleteNotOwnFile(ResourceHeader rh)
 	{
 		std::vector <Resource>::iterator it;
@@ -162,15 +162,14 @@ public:
 
 	ResourceHeader NewFileInfo(const char * name)
 	{
-		for (auto it = NetFileList.begin(); it != NetFileList.end(); it++)
+		for (auto & it : NetFileList)
 		{
-			if (strcmp(it->name, name) == 0)
+			if (strcmp(it.name, name) == 0)
 			{
-				return *it;
+				return it;
 
 			}
 		}
-
 	}
 
 	std::vector<Resource> getOwnFileList()
