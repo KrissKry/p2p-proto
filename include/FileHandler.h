@@ -16,29 +16,23 @@ private:
 public:
 
 
-	int AddFile(const char* path, const char* name, const char *ip)
+	int AddFile(const char* path, const char* name, const char* ip)
 	{
 
-		std::vector <Resource>::iterator it;
 		const auto p1 = std::chrono::system_clock::now();
-		char* fullPath = new char[strlen(path) + strlen(name) + 7];// 7 bo / .txt i \0
-		strcpy(fullPath, path);
-		strcat(fullPath, "/");
-		strcat(fullPath, name);
-		strcat(fullPath, ".txt");
 		char c;
 		Resource res{};
 
 
 		//sprawdzenie czy nie ma pliku o takiej samej nazwie
-		for (it = OwnFileList.begin(); it != OwnFileList.end(); it++)
+		for (auto it = OwnFileList.begin(); it != OwnFileList.end(); it++)
 		{
 			if (strcmp(it->header.name, name) == 0)
 				return 1;
 		}
 
 		std::ifstream file;
-		file.open(fullPath);
+		file.open(path);
 		if (file.is_open())
 		{
 			while (EOF != (c = getchar()))
@@ -47,6 +41,7 @@ public:
 			}
 		}
 		file.close();
+
 		strcpy(res.header.name, name);
 		strcpy(res.header.uuid, ip);
 		res.header.timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -61,12 +56,12 @@ public:
 	int createFile(Resource resource, const char* ip)
 	{
 
-		std::vector <Resource>::iterator it;
+		
 		const auto p1 = std::chrono::system_clock::now();
 
 
 		//sprawdzenie czy nie ma pliku o takiej samej nazwie
-		for (it = OwnFileList.begin(); it != OwnFileList.end(); it++)
+		for (auto it = OwnFileList.begin(); it != OwnFileList.end(); it++)
 		{
 			if (strcmp(it->header.name, resource.header.name) == 0)
 				return 1;
@@ -76,26 +71,41 @@ public:
 		file.open(resource.header.name);
 		if (file.is_open())
 		{
-			for(int i=0; i< resource.data.size();i++)
+			for (int i = 0; i < resource.data.size(); i++)
 			{
-				file<<resource.data[i];
+				file << resource.data[i];
 			}
 		}
 		file.close();
-	
+
 		OwnFileList.push_back(resource);
 		NetFileList.push_back(resource.header);
 		return 1;
 	}
 
-	int deleteownFile(ResourceHeader rh)
+	// metoda nie jest bezpieczna ale jeœli wybieramy z listy to whatever
+	Resource getFile(const char * name)
+	{
+		for (auto it = OwnFileList.begin(); it != OwnFileList.end(); it++)
+		{
+			if (strcmp(it->header.name, name) == 0)
+			{
+				return *it;
+
+			}
+		}
+
+	}
+
+	//metoda do usuwania dla twórcy pliku od razu usuwa z dwóch list
+	int deleteOwnFile(ResourceHeader rh)
 	{
 		std::vector <Resource>::iterator it;
 		for (it = OwnFileList.begin(); it != OwnFileList.end(); it++)
 		{
 			if (strcmp(it->header.name, rh.name) == 0)
 			{
-                if (remove(rh.name) != 0)
+				if (remove(rh.name) != 0)
 					return 1;
 				OwnFileList.erase(it);
 				deleteFromNetList(rh);
@@ -107,6 +117,24 @@ public:
 
 	}
 
+	// metoda do usuwania pliku jeœli nie jesteœmy twórc¹ a mamy go na swoim dysku
+	int deleteNotOwnFile(ResourceHeader rh)
+	{
+		std::vector <Resource>::iterator it;
+		for (it = OwnFileList.begin(); it != OwnFileList.end(); it++)
+		{
+			if (strcmp(it->header.name, rh.name) == 0)
+			{
+				if (remove(rh.name) != 0)
+					return 1;
+				OwnFileList.erase(it);
+				return 0;
+			}
+
+		}
+		return 1;
+	}
+	
 	int deleteFromNetList(ResourceHeader rh)
 	{
 		std::vector <ResourceHeader>::iterator it;
@@ -122,10 +150,26 @@ public:
 		return 1;
 	}
 
-	int NewFileInfo(ResourceHeader rh, const char* ip)
+	bool isOwner(ResourceHeader rh, const char* ip)
 	{
-		NetFileList.push_back(rh);
-		return 0;
+		if (strcmp(rh.uuid, ip) == 0)
+		{
+			return true;
+		}
+
+		return false;
+	}
+
+	ResourceHeader NewFileInfo(const char * name)
+	{
+		for (auto it = NetFileList.begin(); it != NetFileList.end(); it++)
+		{
+			if (strcmp(it->name, name) == 0)
+			{
+				return *it;
+
+			}
+		}
 
 	}
 
@@ -144,14 +188,14 @@ public:
 		std::vector <Resource>::iterator it;
 		for (it = OwnFileList.begin(); it != OwnFileList.end(); it++)
 		{
-			std::cout << it->header.name <<std::endl;
+			std::cout << it->header.name << std::endl;
 		}
 	}
 
 	void ShowNetFiles()
 	{
 		std::vector <ResourceHeader>::iterator it;
-		for (it= NetFileList.begin(); it != NetFileList.end(); it++)
+		for (it = NetFileList.begin(); it != NetFileList.end(); it++)
 		{
 			std::cout << it->name << std::endl;
 		}
