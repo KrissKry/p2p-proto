@@ -128,7 +128,7 @@ void Supervisor::handleDelete(ResourceHeader resourceHeader) {
 }
 
 void Supervisor::handleUpload(const Resource& res) {
-    fileHandler->createFile(res, "123");
+    fileHandler->createFile(res);
 }
 
 void Supervisor::handleDownload(ResourceHeader resHeader) {

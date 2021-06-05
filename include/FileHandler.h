@@ -55,7 +55,7 @@ public:
 		return res.header;
 	}
 
-	int createFile(Resource resource, const char* ip)
+	int createFile(Resource resource)
 	{
 
 		
