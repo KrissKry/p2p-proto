@@ -16,7 +16,7 @@ private:
 public:
 
 
-	int AddFile(const char* path, const char* name, const char* ip)
+	ResourceHeader AddFile(const char* path, const char* name, const char* ip)
 	{
 
 		const auto p1 = std::chrono::system_clock::now();
@@ -28,19 +28,21 @@ public:
 		for (auto & it : OwnFileList)
 		{
 			if (strcmp(it.header.name, name) == 0)
-				return 1;
+				return res.header;
 		}
 
 		std::ifstream file;
 		file.open(path);
 		if (file.is_open())
 		{
-			while (EOF != (c = getchar()))
+            while (file.get(c))
 			{
 				res.data.push_back(c);
 			}
+            file.close();
+        } else {
+		    return res.header;
 		}
-		file.close();
 
 		strcpy(res.header.name, name);
 		strcpy(res.header.uuid, ip);
@@ -50,7 +52,7 @@ public:
 
 		OwnFileList.push_back(res);
 		NetFileList.push_back(res.header);
-		return 0;
+		return res.header;
 	}
 
 	int createFile(Resource resource, const char* ip)
@@ -94,7 +96,7 @@ public:
 
 			}
 		}
-
+        return Resource {};
 	}
 
 	//metoda do usuwania dla tw�rcy pliku od razu usuwa z dw�ch list
@@ -103,7 +105,7 @@ public:
 		std::vector <Resource>::iterator it;
 		for (it = OwnFileList.begin(); it != OwnFileList.end(); it++)
 		{
-			if (strcmp(it->header.name, rh.name) == 0)
+			if (strcmp(it->header.name, rh.name) == 0 && rh.uuid == it->header.uuid)
 			{
 				if (remove(rh.name) != 0)
 					return 1;
@@ -123,7 +125,7 @@ public:
 		std::vector <Resource>::iterator it;
 		for (it = OwnFileList.begin(); it != OwnFileList.end(); it++)
 		{
-			if (strcmp(it->header.name, rh.name) == 0)
+			if (strcmp(it->header.name, rh.name) == 0 && rh.uuid == it->header.uuid)
 			{
 				if (remove(rh.name) != 0)
 					return 1;
@@ -140,7 +142,7 @@ public:
 		std::vector <ResourceHeader>::iterator it;
 		for (it = NetFileList.begin(); it != NetFileList.end(); it++)
 		{
-			if (strcmp(it->name, rh.name) == 0)
+			if (strcmp(it->name, rh.name) == 0 && rh.uuid == it->uuid)
 			{
 				NetFileList.erase(it);
 				return 0;
@@ -160,17 +162,30 @@ public:
 		return false;
 	}
 
-	ResourceHeader NewFileInfo(const char * name)
+	ResourceHeader GetFileInfo(const char * name)
 	{
 		for (auto & it : NetFileList)
 		{
 			if (strcmp(it.name, name) == 0)
 			{
 				return it;
-
 			}
 		}
+		return ResourceHeader {};
 	}
+
+    int NewFileInfo(ResourceHeader header)
+    {
+        for (auto & it : NetFileList)
+        {
+            if (strcmp(it.name, header.name) == 0)
+            {
+                NetFileList.push_back(header);
+                return 0;
+            }
+        }
+        return 1;
+    }
 
 	std::vector<Resource> getOwnFileList()
 	{

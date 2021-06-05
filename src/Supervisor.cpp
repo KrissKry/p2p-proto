@@ -8,23 +8,23 @@
 
 Supervisor::Supervisor() {
     fileHandler = new FileHandler();
-    network_handler = new NetworkHandler(tcp_upflow, tcp_downflow, udp_upflow, udp_downflow);
+    networkHandler = new NetworkHandler(tcp_upflow, tcp_downflow, udp_upflow, udp_downflow);
 }
 
-Supervisor::~Supervisor() { delete fileHandler; }
+Supervisor::~Supervisor() { delete fileHandler; delete networkHandler; }
 
 void Supervisor::run() {
     // start network connector
     std::thread tcpQueueListener(&Supervisor::tcpQueueListener, this);
     std::thread udpQueueListener(&Supervisor::udpQueueListener, this);
 
-    int res = network_handler->createNewTCPServer();
+    int res = networkHandler->createNewTCPServer();
     if(res == 0) {
-        std::thread tcpServer(&NetworkHandler::handleTCPServer, network_handler, 0);
+        std::thread tcpServer(&NetworkHandler::handleTCPServer, networkHandler, 0);
         tcpServer.detach();
     }
 
-    std::thread udpServer(&NetworkHandler::udpServerRun, network_handler);
+    std::thread udpServer(&NetworkHandler::udpServerRun, networkHandler);
     udpServer.detach();
 
     tcpQueueListener.join();
@@ -35,7 +35,20 @@ void Supervisor::tcpQueueListener() {
     std::pair<int, ProtoPacket> message;
     while(shouldRun) {
         tcp_upflow.pop(message);
-        std::cout<<message.second.command<<std::endl;
+        Resource res = {};
+        res.header = message.second.header;
+        res.data = message.second.data;
+        switch (message.second.command)
+        {
+            case Commands::DOWNLOAD:
+                handleDownload(res.header);
+                break;
+            case Commands::UPLOAD:
+                handleUpload(res);
+                break;
+            default:
+                break;
+        }
     }
 }
 
@@ -46,13 +59,13 @@ void Supervisor::udpQueueListener() {
         switch (message.command)
         {
             case Commands::CREATE:
-                createFile(message.header);
+                handleCreate(message.header);
                 break;
             case Commands::DELETE:
-                deleteFile(message.header);
+                handleDelete(message.header);
                 break;
             case Commands::GET_INFO:
-                getInfo();
+                handleGetInfo();
                 break;
             default:
                 break;
@@ -71,6 +84,7 @@ void Supervisor::broadcastDelete(ResourceHeader resourceHeader) {
     ProtoPacket protoPacket;
     protoPacket.command = Commands::DELETE;
     protoPacket.header = resourceHeader;
+
     udp_downflow.push(protoPacket);
 }
 
@@ -81,23 +95,52 @@ void Supervisor::broadcastGetInfo(ResourceHeader resourceHeader) {
     udp_downflow.push(protoPacket);
 }
 
-void Supervisor::getInfo() {
+void Supervisor::sendDownload(ResourceHeader resourceHeader) {
+    ProtoPacket protoPacket;
+    protoPacket.command = Commands::DOWNLOAD;
+    protoPacket.header = resourceHeader;
+    const std::pair message(1, protoPacket);
+    tcp_downflow.push(message);
+}
+
+void Supervisor::sendUpload(const Resource& res) {
+    ProtoPacket protoPacket;
+    protoPacket.command = Commands::UPLOAD;
+    protoPacket.header = res.header;
+    protoPacket.data = res.data;
+    const std::pair message(1, protoPacket);
+    tcp_downflow.push(message);
+}
+
+void Supervisor::handleGetInfo() {
     std::vector<ResourceHeader> files = fileHandler->getNetFileList();
     // tcp send
 }
 
-void Supervisor::createFile(ResourceHeader header) {
-    fileHandler->NewFileInfo(header, "123");
+void Supervisor::handleCreate(ResourceHeader resourceHeader) {
+    fileHandler->NewFileInfo(resourceHeader);
+    // tcp duplicate ?
 }
 
-void Supervisor::deleteFile(ResourceHeader resHeader) {
-    fileHandler->deleteFromNetList(resHeader);
+void Supervisor::handleDelete(ResourceHeader resourceHeader) {
+    fileHandler->deleteFromNetList(resourceHeader);
+    fileHandler->deleteNotOwnFile(resourceHeader);
+}
+
+void Supervisor::handleUpload(const Resource& res) {
+    fileHandler->createFile(res, "123");
+}
+
+void Supervisor::handleDownload(ResourceHeader resHeader) {
+    Resource res = fileHandler->getFile(resHeader.name);
+    if(strcmp(res.header.name, "") != 0) {
+        sendUpload(res);
+    }
 }
 
 int Supervisor::createFile(const std::string& path, const std::string& name) {
-    int res = fileHandler->AddFile(path.c_str(), name.c_str(), "123");
-    ResourceHeader header{};
-    if(res == 0) {
+    ResourceHeader header = fileHandler->AddFile(path.c_str(), name.c_str(), "123");
+    if(strcmp(header.name, "") != 0) {
         broadcastCreate(header);
         return 0;
     }
@@ -105,20 +148,18 @@ int Supervisor::createFile(const std::string& path, const std::string& name) {
 }
 
 int Supervisor::downloadFile(const std::string& name) {
-//    int res = fileHandler->getFile(name);
-//    if(res == 0) {
-//        ProtoPacket packet{};
-//        packet.command = 3;
-//        tcp_downflow.push(packet);
-//        return 0;
-//    }
-//    return -1;
+    ResourceHeader header = fileHandler->GetFileInfo(name.c_str());
+    if(strcmp(header.name, "") != 0) {
+        sendDownload(header);
+        return 0;
+    }
+    return -1;
 }
 
 int Supervisor::deleteFile(const std::string& name) {
     ResourceHeader header{};
     strcpy(header.name, name.c_str());
-    int res = fileHandler->deleteownFile(header);
+    int res = fileHandler->deleteOwnFile(header);
     if(res == 0) {
         broadcastDelete(header);
         return 0;
@@ -128,6 +169,10 @@ int Supervisor::deleteFile(const std::string& name) {
 
 std::vector<Resource> Supervisor::listDisk() {
     return fileHandler->getOwnFileList();
+}
+
+std::vector<ResourceHeader> Supervisor::listNetwork() {
+    return fileHandler->getNetFileList();
 }
 
 void Supervisor::cleanUp() {

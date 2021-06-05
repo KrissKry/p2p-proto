@@ -47,11 +47,22 @@ bool UI::parseCommand() {
         }
     } else if (tokenList.size() == 2 && tokenList[0] == "list" && tokenList[1] == "disk") {
         std::vector<Resource> resourceList = supervisor->listDisk();
+
         if(resourceList.empty()) {
             safeOutput("No resources");
         } else {
-            for (Resource res: resourceList) {
-                safeOutput(res.header.name);
+            for (const Resource& res: resourceList) {
+                std::cout<<res.header.name<<" "<<res.header.uuid<<std::endl;
+            }
+        }
+    } else if (tokenList.size() == 2 && tokenList[0] == "list" && tokenList[1] == "net") {
+        std::vector<ResourceHeader> resourceList = supervisor->listNetwork();
+
+        if(resourceList.empty()) {
+            safeOutput("No resources");
+        } else {
+            for (ResourceHeader header: resourceList) {
+                std::cout<<header.name<<" "<<header.uuid<<std::endl;
             }
         }
     } else {

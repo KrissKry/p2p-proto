@@ -18,7 +18,7 @@ class Supervisor {
 private:
     bool shouldRun = true;
     FileHandler * fileHandler;
-    NetworkHandler* network_handler;
+    NetworkHandler* networkHandler;
 
     SyncedDeque< std::pair<int, ProtoPacket > > tcp_downflow;
     SyncedDeque< std::pair<int, ProtoPacket > > tcp_upflow;
@@ -27,6 +27,17 @@ private:
 
     void tcpQueueListener();
     void udpQueueListener();
+
+    void handleGetInfo();
+    void handleCreate(ResourceHeader header);
+    void handleDelete(ResourceHeader resHeader);
+    void handleDownload(ResourceHeader resHeader);
+    void handleUpload(const Resource &res);
+    void broadcastCreate(ResourceHeader resourceHeader);
+    void broadcastDelete(ResourceHeader resourceHeader);
+    void broadcastGetInfo(ResourceHeader resourceHeader);
+    void sendDownload(ResourceHeader resourceHeader);
+    void sendUpload(const Resource& res);
 
 public:
     Supervisor();
@@ -38,16 +49,7 @@ public:
     int downloadFile(const std::string &name);
     int deleteFile(const std::string &name);
     std::vector<Resource> listDisk();
-    void createFile(ResourceHeader header);
-    void deleteFile(ResourceHeader header);
-
-    void broadcastCreate(ResourceHeader resourceHeader);
-
-    void broadcastDelete(ResourceHeader resourceHeader);
-
-    void broadcastGetInfo(ResourceHeader resourceHeader);
-
-    void getInfo();
+    std::vector<ResourceHeader> listNetwork();
 };
 
 
