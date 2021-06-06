@@ -41,6 +41,7 @@ public:
 
     int pop(T &message)
     {   
+
         std::unique_lock<std::mutex> lock(q_lock);
 
         cv.wait(lock, [&]
@@ -51,8 +52,11 @@ public:
         {
 
             //jesli jest to sprawdzic czy komunikat jest dla naszego scoketu
-            if (q.front().first == message.first)
+            if (q.front().first == message.first || message.first == -1)
             {
+                std::cout << "POP ZGODNY SOCKET: " << message.first << "\n";
+                if (q.size() > 0)
+                    std::cout << "Q: " << q.front().first << "\n";
 
                 //jesli tak to kopiujemy i wychodzimy
                 message = q.front();
@@ -61,9 +65,12 @@ public:
             }
             else
             {
-
+                std::cout << "POP ELSE ;_;\n";
+                std::cout << "POP: " << message.first << "\n";
+                if (q.size() > 0)
+                    std::cout << "Q: " << q.front().first << "\n";
                 //pozwalamy innemu wątkowi zgarnąć swoją wiadomość
-                cv.notify_one();
+                cv.notify_one(); 
                 return -1;
             }
         }

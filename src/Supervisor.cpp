@@ -49,9 +49,10 @@ void Supervisor::tcpQueueListener()
     std::pair<int, ProtoPacket> message;
     
     while (shouldRun)
-    {
+    {   
+        message.first = -1;
         tcp_upflow.pop(message);
-        std::cout << "komenda: " << message.second.command << "\n";
+        std::cout << "socket" << message.first << "komenda: " << message.second.command << "\n";
 
         Resource res = {};
         res.header = message.second.header;
@@ -60,7 +61,7 @@ void Supervisor::tcpQueueListener()
         switch (message.second.command)
         {
         case Commands::DOWNLOAD:
-            handleDownload(res.header);
+            handleDownload(message.first, res.header);
             break;
         case Commands::UPLOAD:
             handleUpload(res);
@@ -132,13 +133,13 @@ void Supervisor::sendDownload(ResourceHeader resourceHeader)
     tcp_downflow.push(message);
 }
 
-void Supervisor::sendUpload(const Resource &res)
+void Supervisor::sendUpload(int fd, const Resource &res)
 {
     ProtoPacket protoPacket;
     protoPacket.command = Commands::UPLOAD;
     protoPacket.header = res.header;
     protoPacket.data = res.data;
-    const std::pair message(1, protoPacket);
+    const std::pair message(fd, protoPacket);
     tcp_downflow.push(message);
 }
 
@@ -164,15 +165,15 @@ void Supervisor::handleUpload(const Resource &res)
     fileHandler->createFile(res);
 }
 
-void Supervisor::handleDownload(ResourceHeader resHeader)
+void Supervisor::handleDownload(int fd, ResourceHeader resHeader)
 {
-    std::cout << "handle download\n";
+    std::cout << "handle download with " << resHeader.name << " @" << resHeader.uuid << "\n";
     Resource res = fileHandler->getFile(resHeader.name);
     std::cout << res.header.name << " " << res.header.size << " " << res.header.uuid << "\n";
     if (strcmp(res.header.name, "") != 0)
     {
         std::cout << "jest ok\n";
-        sendUpload(res);
+        sendUpload(fd, res);
     }
 }
 

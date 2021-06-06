@@ -80,7 +80,7 @@ public:
         ProtoPacket packet;
         packet.command = Commands::DOWNLOAD; //SEND
         auto pair = std::make_pair(socket, packet);
-
+        std::cout << "stworzona parka z socketem: " << socket << "\n";
         // read resource request and command
         std::cout << "packet vector size: " << packet.data.size() << "\n";
         if (tcp_connections.at(0).first->receiveData(socket, static_cast<void *>(&packet.header), sizeof(packet.header)) < 0)

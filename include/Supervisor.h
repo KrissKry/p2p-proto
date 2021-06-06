@@ -37,13 +37,13 @@ private:
     void handleGetInfo();
     void handleCreate(ResourceHeader header, struct in_addr ip);
     void handleDelete(ResourceHeader resHeader);
-    void handleDownload(ResourceHeader resHeader);
+    void handleDownload(int fd, ResourceHeader resHeader);
     void handleUpload(const Resource &res);
     void broadcastCreate(ResourceHeader resourceHeader);
     void broadcastDelete(ResourceHeader resourceHeader);
     void broadcastGetInfo(ResourceHeader resourceHeader);
     void sendDownload(ResourceHeader resourceHeader);
-    void sendUpload(const Resource& res);
+    void sendUpload(int fd, const Resource& res);
 
 public:
     Supervisor(struct in_addr);
