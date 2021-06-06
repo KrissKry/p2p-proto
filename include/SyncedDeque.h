@@ -46,6 +46,9 @@ public:
         cv.wait(lock, [&]
                 { return !q.empty() || !this->stopper; });
 
+        if (this->stopper)
+            return -1;
+            
         //czy typ wiadomosci jest odpowiedni dla tcp
         if constexpr (std::is_same_v<T, std::pair<int, ProtoPacket>>)
         {
