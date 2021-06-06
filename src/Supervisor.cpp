@@ -47,12 +47,16 @@ void Supervisor::run()
 void Supervisor::tcpQueueListener()
 {
     std::pair<int, ProtoPacket> message;
+    
     while (shouldRun)
     {
         tcp_upflow.pop(message);
+        std::cout << "komenda: " << message.second.command << "\n";
+
         Resource res = {};
         res.header = message.second.header;
         res.data = message.second.data;
+        std::cout << res.header.name << " x x x " << res.header.size << "\n";
         switch (message.second.command)
         {
         case Commands::DOWNLOAD:
@@ -162,9 +166,12 @@ void Supervisor::handleUpload(const Resource &res)
 
 void Supervisor::handleDownload(ResourceHeader resHeader)
 {
+    std::cout << "handle download\n";
     Resource res = fileHandler->getFile(resHeader.name);
+    std::cout << res.header.name << " " << res.header.size << " " << res.header.uuid << "\n";
     if (strcmp(res.header.name, "") != 0)
     {
+        std::cout << "jest ok\n";
         sendUpload(res);
     }
 }

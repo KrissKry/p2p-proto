@@ -40,7 +40,7 @@ public:
     }
 
     int pop(T &message)
-    {
+    {   
         std::unique_lock<std::mutex> lock(q_lock);
 
         cv.wait(lock, [&]

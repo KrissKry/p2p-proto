@@ -87,8 +87,9 @@ public:
             return -1; //zwroc error jakis cos
 
         //send request for a file
+        std::cout << "PUSH: komenda:" << pair.second.command << " " << pair.second.header.name << "\n";
         tcp_upflow.push(pair);
-
+        std::cout << "pushed and try popping now:\n";
         //wait for response for our socket
         while (tcp_downflow.pop(pair) < 0)
         {
@@ -136,17 +137,18 @@ public:
         int client_index = spawnClient(header, client_socket);
 
         //send header
-        std::cout << "Socket:" << client_socket << " index" << client_index << "\n";
-        std::cout << header.name << " " << header.size << " " << header.uuid << "\n";
-        std::cout << "packet " << &packet <<  " packet header: " << &packet.header << " rozmiar:" << sizeof(packet.header) << std::endl; 
+        // std::cout << "Socket:" << client_socket << " index" << client_index << "\n";
+        // std::cout << header.name << " " << header.size << " " << header.uuid << "\n";
+        // std::cout << "packet " << &packet <<  " packet header: " << &packet.header << " rozmiar:" << sizeof(packet.header) << std::endl; 
         packet.data.resize(packet.header.size);
-        std::cout << "dane rozmiar: " << packet.data.size() << " @" << &packet.data << " " << &packet.data[0] << "\n";
+        // std::cout << "dane rozmiar: " << packet.data.size() << " @" << &packet.data << " " << &packet.data[0] << "\n";
         int resp {};
         if ( tcp_connections.at(client_index).first->setupClient() < 0) {
             strerror(errno);
             return -1;
         }
         std::cout << "post setup client\n";
+        std::cout << "sending request for " << packet.header.name << " @" << packet.header.uuid << "\n"; 
         if ( (resp = tcp_connections.at(client_index).first->sendData(client_socket, static_cast<void *>(&packet.header), sizeof(packet.header))) < 0)
             return -1;
         std::cout << "resp: " << resp << "\n";
@@ -187,6 +189,10 @@ public:
         memset(&in_addr.sin_zero, '\0', 8);
 
         //bind socket with sockaddr
+        int xd = 1;
+        if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &xd, sizeof(int)) < 0)
+            std::cout << "setsockopt(SO_REUSEADDR) failed\n";
+
         if ((bind_status = bind(server_socket, (struct sockaddr *)&in_addr, sizeof(in_addr))) < 0)
         {
             std::cout << "[ERR] " << strerror(errno);
