@@ -108,6 +108,17 @@ public:
         // close(socket);
         return 0;
     }
+    void udpDownflowQueueListener()
+    {
+        ProtoPacket message;
+        while (true)
+        {
+            std::cout<<"NetworkHandler: udpDownflow waiting for message"<<std::endl;
+            udp_downflow.pop(message);
+            std::cout<<"NetworkHandler: udpDownflow message received"<<std::endl;
+            udpClient.broadcast(message);
+        }
+    }
 
     int runTCPClientThread(const ResourceHeader& header)
     {   

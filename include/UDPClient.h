@@ -55,6 +55,7 @@ public:
             std::cout << feed << std::endl;
             perror("sendto");
         }
+        std::cout<< "UDPClient: broadcast" <<std::endl;
     }
     void server(SyncedDeque<std::pair<struct in_addr, ProtoPacket>> &udp_upflow)
     {

@@ -22,6 +22,7 @@ void Supervisor::run() {
     std::thread tcpQueueListener(&Supervisor::tcpQueueListener, this);
     std::thread udpQueueListener(&Supervisor::udpQueueListener, this);
 
+
     int res = networkHandler->createNewTCPServer();
     if(res == 0) {
         std::thread tcpServer(&NetworkHandler::handleTCPServer, networkHandler, 0);
@@ -30,7 +31,9 @@ void Supervisor::run() {
 
     std::thread udpServer(&NetworkHandler::udpServerRun, networkHandler);
     udpServer.detach();
-
+    std::thread udpDownflowQueListener(&NetworkHandler::udpDownflowQueueListener, networkHandler);
+    udpDownflowQueListener.detach();
+    std::cout<< "udpDownlow detach"<<std::endl;
     tcpQueueListener.join();
     udpQueueListener.join();
 }
@@ -83,6 +86,7 @@ void Supervisor::broadcastCreate(ResourceHeader resourceHeader) {
     ProtoPacket protoPacket;
     protoPacket.command = Commands::CREATE;
     protoPacket.header = resourceHeader;
+    std::cout<<"supervisior: broadcastCread"<<std::endl;
     udp_downflow.push(protoPacket);
 }
 
@@ -146,6 +150,7 @@ void Supervisor::handleDownload(ResourceHeader resHeader) {
 int Supervisor::createFile(const std::string& path, const std::string& name) {
     ResourceHeader header = fileHandler->AddFile(path.c_str(), name.c_str(), ip);
     if(strcmp(header.name, "") != 0) {
+        std::cout<< "supervisor: createFile"<<std::endl;
         broadcastCreate(header);
         return 0;
     }

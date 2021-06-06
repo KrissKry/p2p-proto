@@ -29,7 +29,7 @@ public:
         std::unique_lock<std::mutex> lock(q_lock);
         q.push_back(message);
 
-        // std::cout << "pushing message: " << typeid(message).name() << "\n";
+        std::cout << "pushing message: " << typeid(message).name() << "\n";
         
         if constexpr (std::is_same_v<T, std::pair<struct in_addr, ProtoPacket> >)
         {
@@ -44,7 +44,7 @@ public:
         std::unique_lock<std::mutex> lock(q_lock);
 
         cv.wait(lock, [&]
-                { return !q.empty() && !this->stopper; });
+                { return !q.empty() || !this->stopper; });
 
         //czy typ wiadomosci jest odpowiedni dla tcp
         if constexpr (std::is_same_v<T, std::pair<int, ProtoPacket>>)
