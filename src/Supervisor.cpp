@@ -3,79 +3,114 @@
 //
 
 #include <iostream>
+#include <thread>
 #include "../include/Supervisor.h"
 
-Supervisor::Supervisor(): end(false) {
-//    filehandler = FileHandler();
-//    networkConnector = NetworkConnector();
-    threadManager = new ThreadManager();
+Supervisor::Supervisor()
+{
+    fileHandler = new FileHandler();
     network_handler = new NetworkHandler(tcp_upflow, tcp_downflow, udp_upflow, udp_downflow);
 }
 
-Supervisor::~Supervisor() { delete threadManager; }
+Supervisor::~Supervisor() { delete fileHandler; }
 
-void Supervisor::run() {
+void Supervisor::run()
+{
     // start network connector
-    threadManager->createThread(std::thread(&Supervisor::listDisk, this));
-    int i;
-    while(!end) {
-        {
-            std::lock_guard<std::mutex> lock(incoming_tx);
-            if (!incoming.empty()) {
-                i = incoming.front();
-                incoming.pop_front();
-                std::cout<<i<<std::endl;
-            }
-        }
+    std::thread tcpQueueListener(&Supervisor::tcpQueueListener, this);
+    std::thread udpQueueListener(&Supervisor::udpQueueListener, this);
+
+    int res = network_handler->createNewTCPServer();
+    if (res == 0)
+    {
+        std::thread tcpServer(&NetworkHandler::handleTCPServer, network_handler, 0);
+        tcpServer.detach();
+    }
+
+    std::thread udpServer(&NetworkHandler::udpServerRun, network_handler);
+    udpServer.detach();
+
+    tcpQueueListener.join();
+    udpQueueListener.join();
+}
+
+void Supervisor::tcpQueueListener()
+{
+    std::pair<int, ProtoPacket> message;
+    while (shouldRun)
+    {
+        tcp_upflow.pop(message);
+        std::cout << message.second.command << std::endl;
     }
 }
 
-void Supervisor::createFile(Resource res) {
-//    fileHandler->createFile(res);
+void Supervisor::udpQueueListener()
+{
+    std::pair<struct in_addr, ProtoPacket> message;
+    while (shouldRun)
+    {
+        udp_upflow.pop(message);
+        // std::cout<<message.command<<std::endl;
+    }
 }
 
-void Supervisor::deleteFile(ResourceHeader resHeader) {
-//    fileHandler->deleteFile(resHeader);
+void Supervisor::createFile(Resource &res)
+{
+    fileHandler->createFile(res, "123");
 }
 
-int Supervisor::createFile(const std::string& path, const std::string& name) {
-//    Resource* res = fileHandler->createFile(path, name);
-//    if(res != nullptr) {
-//        std::lock_guard<std::mutex> lock(outgoing_tx);
-//        outgoing.push_back(1);
-//        return 0;
-//    }
+void Supervisor::deleteFile(ResourceHeader resHeader)
+{
+    fileHandler->deleteownFile(resHeader);
+}
+
+int Supervisor::createFile(const std::string &path, const std::string &name)
+{
+    int res = fileHandler->AddFile(path.c_str(), name.c_str(), "123");
+    if (res == 0)
+    {
+        ProtoPacket packet{};
+        packet.command = 1;
+
+        udp_downflow.push(packet);
+        return 0;
+    }
     return -1;
 }
 
-int Supervisor::downloadFile(const std::string& name) {
-//    Resource* res = fileHandler->getFile(name);
-//    if(res != nullptr) {
-//        std::lock_guard<std::mutex> lock(outgoing_tx);
-//        outgoing.push_back(2);
-//        return 0;
-//    }
+int Supervisor::downloadFile(const std::string &name)
+{
+    //    int res = fileHandler->getFile(name);
+    //    if(res == 0) {
+    //        ProtoPacket packet{};
+    //        packet.command = 3;
+    //        tcp_downflow.push(packet);
+    //        return 0;
+    //    }
+    //    return -1;
+}
+
+int Supervisor::deleteFile(const std::string &name)
+{
+    ResourceHeader header{};
+    strcpy(header.name, name.c_str());
+    int res = fileHandler->deleteownFile(header);
+    if (res == 0)
+    {
+        ProtoPacket packet{};
+        packet.command = 2;
+        udp_downflow.push(packet);
+        return 0;
+    }
     return -1;
 }
 
-int Supervisor::deleteFile(const std::string& name) {
-//    Resource* res = fileHandler->deleteFile(name);
-//    if(res != nullptr) {
-//        std::lock_guard<std::mutex> lock(outgoing_tx);
-//        outgoing.push_back(3);
-//        return 0;
-//    }
-    return -1;
+std::vector<Resource> Supervisor::listDisk()
+{
+    return fileHandler->getOwnFileList();
 }
 
-std::vector<Resource> Supervisor::listDisk() {
-    std::cout<<"a"<<std::endl;
-    std::chrono::seconds dura( 5);
-    std::this_thread::sleep_for( dura );
-    //    return fileHandler->listDisk();
-}
-
-void Supervisor::cleanUp() {
-    end = true;
-    threadManager->cleanUp();
+void Supervisor::cleanUp()
+{
+    shouldRun = false;
 }

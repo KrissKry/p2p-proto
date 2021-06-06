@@ -15,14 +15,12 @@ public:
     NetworkHandler(
         SyncedDeque<std::pair<int, ProtoPacket>> &tcp_up,
         SyncedDeque<std::pair<int, ProtoPacket>> &tcp_down,
-        SyncedDeque<ProtoPacket> &udp_up,
+        SyncedDeque<std::pair<struct in_addr, ProtoPacket>> &udp_up,
         SyncedDeque<ProtoPacket> &udp_down) : tcp_upflow(tcp_up),
                                               tcp_downflow(tcp_down),
                                               udp_upflow(udp_up),
                                               udp_downflow(udp_down)
     {
-
-        createNewTCPServer();
     }
     ~NetworkHandler() {}
 
@@ -109,31 +107,36 @@ public:
         return 0;
     }
 
-    // int runTCPClientThread( ) {
-    //     int client_socket;
+    int runTCPClientThread(ProtoPacket &packet)
+    {
+        int client_socket;
 
-    //     if ( (client_socket = openNewSocket()) < 0) {
-    //         std::cout << "[ERR] " << strerror(errno);
-    //         return -1;
-    //     }
+        if ((client_socket = openNewSocket()) < 0)
+        {
+            std::cout << "[ERR] " << strerror(errno);
+            return -1;
+        }
+        int client_index = spawnClient(packet, client_socket);
 
-    //     return 0;
-    // }
+        //send command and header
+        if (tcp_connections.at(client_index).first->sendData(client_socket, static_cast<void *>(&packet), sizeof(packet.header) + 1) < 0)
+            return -1;
 
-private:
-    std::deque<std::shared_ptr<std::thread>> network_threads;
-    std::mutex deque_lock;
+        //receive header
+        if (tcp_connections.at(client_index).first->receiveData(static_cast<void *>(&packet.header), sizeof(packet.header)) < 0)
+            return -1;
 
-    std::deque<std::pair<std::shared_ptr<TCPConnector>, int>> tcp_connections;
+        //resize data accordingly
+        packet.data.resize(packet.header.size);
+        //receive data
+        if (tcp_connections.at(client_index).first->receiveData(static_cast<void *>(&packet.data[0]), packet.data.size()) < 0)
+            return -1;
 
-    UDPClient udpClient;
+        // tcp_upflow.push(std::make_pair(client_socket, packet))
+        //niepotrzebne bo mamy pakiet przez refke przekazany i zakladamy ze resource jest przekazany do pakietu przez refke tez?
 
-    SyncedDeque<std::pair<int, ProtoPacket>> &tcp_downflow;
-    SyncedDeque<std::pair<int, ProtoPacket>> &tcp_upflow;
-    SyncedDeque<ProtoPacket> &udp_downflow;
-    SyncedDeque<ProtoPacket> &udp_upflow;
-
-    bool tcp_server_running = false;
+        return 0;
+    }
 
     //only once at the beginning!!
     int createNewTCPServer()
@@ -166,7 +169,7 @@ private:
 
         //store information on the connection in deque
         std::lock_guard<std::mutex> lock(deque_lock);
-        tcp_connections.push_front(std::make_pair(server_ptr, server_socket));
+        tcp_connections.push_front(std::make_pair(std::move(server_ptr), server_socket));
 
         //listen to the sound of silence
         if (tcp_connections.at(0).first->serverListen() < 0)
@@ -176,6 +179,34 @@ private:
 
         //return server connection index
         return 0;
+    }
+
+private:
+    std::deque<std::shared_ptr<std::thread>> network_threads;
+    std::mutex deque_lock;
+
+    std::deque<std::pair<std::shared_ptr<TCPConnector>, int>> tcp_connections;
+
+    UDPClient udpClient;
+
+    SyncedDeque<std::pair<int, ProtoPacket>> &tcp_downflow;
+    SyncedDeque<std::pair<int, ProtoPacket>> &tcp_upflow;
+    SyncedDeque<ProtoPacket> &udp_downflow;
+    SyncedDeque<std::pair<struct in_addr, ProtoPacket>> &udp_upflow;
+
+    bool tcp_server_running = false;
+
+    int spawnClient(ProtoPacket &packet, int client_socket)
+    {
+        unsigned short dest_port = 8080;
+
+        auto client_ptr = std::shared_ptr<TCPConnector>(new TCPConnector(client_socket, dest_port, packet.header.uuid));
+
+        std::lock_guard<std::mutex> lock(deque_lock);
+
+        tcp_connections.push_back(std::make_pair(std::move(client_ptr), client_socket));
+
+        return tcp_connections.size() - 1;
     }
 
     int openNewSocket()

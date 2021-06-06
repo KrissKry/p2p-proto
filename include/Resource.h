@@ -39,5 +39,4 @@ struct ProtoPacket
     std::vector<unsigned char> data;
 };
 
-
 #endif

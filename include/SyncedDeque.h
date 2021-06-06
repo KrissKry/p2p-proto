@@ -22,6 +22,11 @@ public:
     {
         std::unique_lock<std::mutex> lock(q_lock);
         q.push_back(message);
+
+        if constexpr (std::is_same_v<T, ProtoPacket>)
+        {
+            std::cout << "SyncedDeque udp que push: " << q.front().command << std::endl;
+        }
         lock.unlock();
         cv.notify_one();
     }

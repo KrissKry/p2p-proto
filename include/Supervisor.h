@@ -7,46 +7,40 @@
 
 #include <mutex>
 #include "Resource.h"
-#include "ThreadManager.h"
+#include "FileHandler.h"
+#include "SyncedDeque.h"
 #include <deque>
 #include <condition_variable>
 #include <atomic>
-#include "SyncedDeque.h"
 #include "NetworkHandler.h"
 
-class Supervisor {
+class Supervisor
+{
 private:
-    std::atomic<bool> end;
-    ThreadManager * threadManager;
+    bool shouldRun = true;
+    FileHandler *fileHandler;
+    NetworkHandler *network_handler;
 
-    SyncedDeque< std::pair<int, ProtoPacket > > tcp_downflow;
-    SyncedDeque< std::pair<int, ProtoPacket > > tcp_upflow;
-    SyncedDeque< ProtoPacket > udp_downflow; 
-    SyncedDeque< ProtoPacket > udp_upflow;
+    SyncedDeque<std::pair<int, ProtoPacket>> tcp_downflow;
+    SyncedDeque<std::pair<int, ProtoPacket>> tcp_upflow;
+    SyncedDeque<ProtoPacket> udp_downflow;
+    SyncedDeque<std::pair<struct in_addr, ProtoPacket>> udp_upflow;
 
-    NetworkHandler* network_handler;
+    void tcpQueueListener();
+    void udpQueueListener();
+
 public:
     Supervisor();
     ~Supervisor();
     void run();
     void cleanUp();
 
-    std::deque<int> incoming;
-    std::deque<int> outgoing;
-    std::mutex incoming_tx;
-    std::mutex outgoing_tx;
-//    FileHandler fileHandler;
-//    NetworkConnector networkConnector;
-
-    
-
     int createFile(const std::string &path, const std::string &name);
     int downloadFile(const std::string &name);
     int deleteFile(const std::string &name);
     std::vector<Resource> listDisk();
-    void createFile(Resource res);
+    void createFile(Resource &res);
     void deleteFile(ResourceHeader resHeader);
 };
-
 
 #endif //SUPERVISOR_H
