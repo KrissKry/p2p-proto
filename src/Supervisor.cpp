@@ -152,7 +152,8 @@ int Supervisor::createFile(const std::string& path, const std::string& name) {
 int Supervisor::downloadFile(const std::string& name) {
     ResourceHeader header = fileHandler->GetFileInfo(name.c_str());
     if(strcmp(header.name, "") != 0) {
-        sendDownload(header);
+        std::thread tcpServer(&NetworkHandler::runTCPClientThread, networkHandler, header);
+        tcpServer.detach();
         return 0;
     }
     return -1;
