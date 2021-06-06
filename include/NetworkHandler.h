@@ -83,7 +83,7 @@ public:
 
         // read resource request and command
         std::cout << "packet vector size: " << packet.data.size() << "\n";
-        if (tcp_connections.at(0).first->receiveData(static_cast<void *>(&packet.header), sizeof(packet.header)) < 0)
+        if (tcp_connections.at(0).first->receiveData(socket, static_cast<void *>(&packet.header), sizeof(packet.header)) < 0)
             return -1; //zwroc error jakis cos
 
         //send request for a file
@@ -136,18 +136,29 @@ public:
         int client_index = spawnClient(header, client_socket);
 
         //send header
-        if (tcp_connections.at(client_index).first->sendData(client_socket, static_cast<void *>(&packet.header), sizeof(packet.header)) < 0)
+        std::cout << "Socket:" << client_socket << " index" << client_index << "\n";
+        std::cout << header.name << " " << header.size << " " << header.uuid << "\n";
+        std::cout << "packet " << &packet <<  " packet header: " << &packet.header << " rozmiar:" << sizeof(packet.header) << std::endl; 
+        packet.data.resize(packet.header.size);
+        std::cout << "dane rozmiar: " << packet.data.size() << " @" << &packet.data << " " << &packet.data[0] << "\n";
+        int resp {};
+        if ( tcp_connections.at(client_index).first->setupClient() < 0) {
+            strerror(errno);
             return -1;
-
+        }
+        std::cout << "post setup client\n";
+        if ( (resp = tcp_connections.at(client_index).first->sendData(client_socket, static_cast<void *>(&packet.header), sizeof(packet.header))) < 0)
+            return -1;
+        std::cout << "resp: " << resp << "\n";
         //receive header
-        if (tcp_connections.at(client_index).first->receiveData(static_cast<void *>(&packet.header), sizeof(packet.header)) < 0)
+        if (tcp_connections.at(client_index).first->receiveData(0, static_cast<void *>(&packet.header), sizeof(packet.header)) < 0)
             return -1;
 
         //resize data accordingly
         packet.data.resize(packet.header.size);
 
         //receive data
-        if (tcp_connections.at(client_index).first->receiveData(static_cast<void *>(&packet.data[0]), packet.data.size()) < 0)
+        if (tcp_connections.at(client_index).first->receiveData(0, static_cast<void *>(&packet.data[0]), packet.data.size()) < 0)
             return -1;
 
         tcp_upflow.push(std::make_pair(client_socket, packet));
