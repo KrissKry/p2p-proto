@@ -77,11 +77,12 @@ public:
         //5. zamknięcie socketu po wysłaniu wszystkiego
 
         ProtoPacket packet;
+        packet.command = Commands::DOWNLOAD; //SEND
         auto pair = std::make_pair(socket, packet);
 
         // read resource request and command
         std::cout << "packet vector size: " << packet.data.size() << "\n";
-        if (tcp_connections.at(0).first->receiveData(static_cast<void *>(&packet), sizeof(packet.header) + 1) < 0)
+        if (tcp_connections.at(0).first->receiveData(static_cast<void *>(&packet.header), sizeof(packet.header)) < 0)
             return -1; //zwroc error jakis cos
 
         //send request for a file
@@ -107,8 +108,12 @@ public:
         return 0;
     }
 
-    int runTCPClientThread(ProtoPacket &packet)
-    {
+    int runTCPClientThread(const ResourceHeader& header)
+    {   
+        ProtoPacket packet {};
+        packet.command = Commands::UPLOAD; //RECEIVE
+        packet.header = header;
+
         int client_socket;
 
         if ((client_socket = openNewSocket()) < 0)
@@ -116,10 +121,10 @@ public:
             std::cout << "[ERR] " << strerror(errno);
             return -1;
         }
-        int client_index = spawnClient(packet, client_socket);
+        int client_index = spawnClient(header, client_socket);
 
-        //send command and header
-        if (tcp_connections.at(client_index).first->sendData(client_socket, static_cast<void *>(&packet), sizeof(packet.header) + 1) < 0)
+        //send header
+        if (tcp_connections.at(client_index).first->sendData(client_socket, static_cast<void *>(&packet.header), sizeof(packet.header)) < 0)
             return -1;
 
         //receive header
@@ -128,12 +133,13 @@ public:
 
         //resize data accordingly
         packet.data.resize(packet.header.size);
+
         //receive data
         if (tcp_connections.at(client_index).first->receiveData(static_cast<void *>(&packet.data[0]), packet.data.size()) < 0)
             return -1;
 
-        // tcp_upflow.push(std::make_pair(client_socket, packet))
-        //niepotrzebne bo mamy pakiet przez refke przekazany i zakladamy ze resource jest przekazany do pakietu przez refke tez?
+        tcp_upflow.push(std::make_pair(client_socket, packet));
+        //EDIT:JEDNAK POTRZEBNA XD niepotrzebne bo mamy pakiet przez refke przekazany i zakladamy ze resource jest przekazany do pakietu przez refke tez?
 
         return 0;
     }
@@ -196,11 +202,11 @@ private:
 
     bool tcp_server_running = false;
 
-    int spawnClient(ProtoPacket &packet, int client_socket)
+    int spawnClient(const ResourceHeader &header, int client_socket)
     {
         unsigned short dest_port = 8080;
 
-        auto client_ptr = std::shared_ptr<TCPConnector>(new TCPConnector(client_socket, dest_port, packet.header.uuid));
+        auto client_ptr = std::shared_ptr<TCPConnector>(new TCPConnector(client_socket, dest_port, header.uuid));
 
         std::lock_guard<std::mutex> lock(deque_lock);
 
