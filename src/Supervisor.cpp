@@ -6,7 +6,8 @@
 #include <thread>
 #include "../include/Supervisor.h"
 
-Supervisor::Supervisor(struct in_addr ip): ip(ip) {
+Supervisor::Supervisor(struct in_addr ip) : ip(ip)
+{
     fileHandler = new FileHandler();
     tcp_downflow.setStopper(this->stop);
     tcp_upflow.setStopper(this->stop);
@@ -15,16 +16,21 @@ Supervisor::Supervisor(struct in_addr ip): ip(ip) {
     networkHandler = new NetworkHandler(tcp_upflow, tcp_downflow, udp_upflow, udp_downflow);
 }
 
-Supervisor::~Supervisor() { delete fileHandler; delete networkHandler; }
+Supervisor::~Supervisor()
+{
+    delete fileHandler;
+    delete networkHandler;
+}
 
-void Supervisor::run() {
+void Supervisor::run()
+{
     // start network connector
     std::thread tcpQueueListener(&Supervisor::tcpQueueListener, this);
     std::thread udpQueueListener(&Supervisor::udpQueueListener, this);
 
-
     int res = networkHandler->createNewTCPServer();
-    if(res == 0) {
+    if (res == 0)
+    {
         std::thread tcpServer(&NetworkHandler::handleTCPServer, networkHandler, 0);
         tcpServer.detach();
     }
@@ -33,28 +39,30 @@ void Supervisor::run() {
     udpServer.detach();
     std::thread udpDownflowQueListener(&NetworkHandler::udpDownflowQueueListener, networkHandler);
     udpDownflowQueListener.detach();
-    std::cout<< "udpDownlow detach"<<std::endl;
+    std::cout << "udpDownlow detach" << std::endl;
     tcpQueueListener.join();
     udpQueueListener.join();
 }
 
-void Supervisor::tcpQueueListener() {
+void Supervisor::tcpQueueListener()
+{
     std::pair<int, ProtoPacket> message;
-    while(shouldRun) {
+    while (shouldRun)
+    {
         tcp_upflow.pop(message);
         Resource res = {};
         res.header = message.second.header;
         res.data = message.second.data;
         switch (message.second.command)
         {
-            case Commands::DOWNLOAD:
-                handleDownload(res.header);
-                break;
-            case Commands::UPLOAD:
-                handleUpload(res);
-                break;
-            default:
-                break;
+        case Commands::DOWNLOAD:
+            handleDownload(res.header);
+            break;
+        case Commands::UPLOAD:
+            handleUpload(res);
+            break;
+        default:
+            break;
         }
     }
 }
@@ -64,33 +72,38 @@ void Supervisor::udpQueueListener()
     std::pair<struct in_addr, ProtoPacket> message;
     while (shouldRun)
     {
+        std::cout << "Supervisor: udpQueueListener: waiting for message" << std::endl;
         udp_upflow.pop(message);
+
         switch (message.second.command)
         {
-            case Commands::CREATE:
-                handleCreate(message.second.header, message.first);
-                break;
-            case Commands::DELETE:
-                handleDelete(message.second.header);
-                break;
-            case Commands::GET_INFO:
-                handleGetInfo();
-                break;
-            default:
-                break;
+        case Commands::CREATE:
+            std::cout << "Supervisor: udpQueueListener:switch create" << std::endl;
+            handleCreate(message.second.header, message.first);
+            break;
+        case Commands::DELETE:
+            handleDelete(message.second.header);
+            break;
+        case Commands::GET_INFO:
+            handleGetInfo();
+            break;
+        default:
+            break;
         }
     }
 }
 
-void Supervisor::broadcastCreate(ResourceHeader resourceHeader) {
+void Supervisor::broadcastCreate(ResourceHeader resourceHeader)
+{
     ProtoPacket protoPacket;
     protoPacket.command = Commands::CREATE;
     protoPacket.header = resourceHeader;
-    std::cout<<"supervisior: broadcastCread"<<std::endl;
+    std::cout << "supervisior: broadcastCread" << std::endl;
     udp_downflow.push(protoPacket);
 }
 
-void Supervisor::broadcastDelete(ResourceHeader resourceHeader) {
+void Supervisor::broadcastDelete(ResourceHeader resourceHeader)
+{
     ProtoPacket protoPacket;
     protoPacket.command = Commands::DELETE;
     protoPacket.header = resourceHeader;
@@ -98,14 +111,16 @@ void Supervisor::broadcastDelete(ResourceHeader resourceHeader) {
     udp_downflow.push(protoPacket);
 }
 
-void Supervisor::broadcastGetInfo(ResourceHeader resourceHeader) {
+void Supervisor::broadcastGetInfo(ResourceHeader resourceHeader)
+{
     ProtoPacket protoPacket;
     protoPacket.command = Commands::GET_INFO;
     protoPacket.header = resourceHeader;
     udp_downflow.push(protoPacket);
 }
 
-void Supervisor::sendDownload(ResourceHeader resourceHeader) {
+void Supervisor::sendDownload(ResourceHeader resourceHeader)
+{
     ProtoPacket protoPacket;
     protoPacket.command = Commands::DOWNLOAD;
     protoPacket.header = resourceHeader;
@@ -113,7 +128,8 @@ void Supervisor::sendDownload(ResourceHeader resourceHeader) {
     tcp_downflow.push(message);
 }
 
-void Supervisor::sendUpload(const Resource& res) {
+void Supervisor::sendUpload(const Resource &res)
+{
     ProtoPacket protoPacket;
     protoPacket.command = Commands::UPLOAD;
     protoPacket.header = res.header;
@@ -122,44 +138,54 @@ void Supervisor::sendUpload(const Resource& res) {
     tcp_downflow.push(message);
 }
 
-void Supervisor::handleGetInfo() {
+void Supervisor::handleGetInfo()
+{
     std::vector<std::pair<struct in_addr, ResourceHeader>> files = fileHandler->getNetFileList();
     // tcp send
 }
 
-void Supervisor::handleCreate(ResourceHeader resourceHeader, struct in_addr senderIp) {
+void Supervisor::handleCreate(ResourceHeader resourceHeader, struct in_addr senderIp)
+{
     fileHandler->NewFileInfo(resourceHeader, senderIp);
 }
 
-void Supervisor::handleDelete(ResourceHeader resourceHeader) {
+void Supervisor::handleDelete(ResourceHeader resourceHeader)
+{
     fileHandler->deleteFromNetList(resourceHeader);
     fileHandler->deleteNotOwnFile(resourceHeader);
 }
 
-void Supervisor::handleUpload(const Resource& res) {
+void Supervisor::handleUpload(const Resource &res)
+{
     fileHandler->createFile(res);
 }
 
-void Supervisor::handleDownload(ResourceHeader resHeader) {
+void Supervisor::handleDownload(ResourceHeader resHeader)
+{
     Resource res = fileHandler->getFile(resHeader.name);
-    if(strcmp(res.header.name, "") != 0) {
+    if (strcmp(res.header.name, "") != 0)
+    {
         sendUpload(res);
     }
 }
 
-int Supervisor::createFile(const std::string& path, const std::string& name) {
+int Supervisor::createFile(const std::string &path, const std::string &name)
+{
     ResourceHeader header = fileHandler->AddFile(path.c_str(), name.c_str(), ip);
-    if(strcmp(header.name, "") != 0) {
-        std::cout<< "supervisor: createFile"<<std::endl;
+    if (strcmp(header.name, "") != 0)
+    {
+        std::cout << "supervisor: createFile" << std::endl;
         broadcastCreate(header);
         return 0;
     }
     return -1;
 }
 
-int Supervisor::downloadFile(const std::string& name) {
+int Supervisor::downloadFile(const std::string &name)
+{
     ResourceHeader header = fileHandler->GetFileInfo(name.c_str());
-    if(strcmp(header.name, "") != 0) {
+    if (strcmp(header.name, "") != 0)
+    {
         std::thread tcpServer(&NetworkHandler::runTCPClientThread, networkHandler, header);
         tcpServer.detach();
         return 0;
@@ -167,26 +193,31 @@ int Supervisor::downloadFile(const std::string& name) {
     return -1;
 }
 
-int Supervisor::deleteFile(const std::string& name) {
+int Supervisor::deleteFile(const std::string &name)
+{
     ResourceHeader header{};
     strcpy(header.name, name.c_str());
     int res = fileHandler->deleteOwnFile(header);
-    if(res == 0) {
+    if (res == 0)
+    {
         broadcastDelete(header);
         return 0;
     }
     return -1;
 }
 
-std::vector<Resource> Supervisor::listDisk() {
+std::vector<Resource> Supervisor::listDisk()
+{
     return fileHandler->getOwnFileList();
 }
 
-std::vector<std::pair<struct in_addr, ResourceHeader>> Supervisor::listNetwork() {
+std::vector<std::pair<struct in_addr, ResourceHeader>> Supervisor::listNetwork()
+{
     return fileHandler->getNetFileList();
 }
 
-void Supervisor::cleanUp() {
+void Supervisor::cleanUp()
+{
     shouldRun = false;
     stop = true;
 }
