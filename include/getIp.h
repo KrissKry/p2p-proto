@@ -12,7 +12,7 @@ struct in_addr getMyIp()
     struct ifaddrs *ifap, *ifa;
     struct sockaddr_in *sa;
     char *addr;
-    struct in_addr chosenIp;
+    struct in_addr chosenIp{};
 
     getifaddrs(&ifap);
     int i = -1;

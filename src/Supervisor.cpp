@@ -6,7 +6,7 @@
 #include <thread>
 #include "../include/Supervisor.h"
 
-Supervisor::Supervisor() {
+Supervisor::Supervisor(struct in_addr ip): ip(ip) {
     fileHandler = new FileHandler();
     networkHandler = new NetworkHandler(tcp_upflow, tcp_downflow, udp_upflow, udp_downflow);
 }
