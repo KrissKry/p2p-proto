@@ -48,7 +48,7 @@ public:
 		strcpy(res.header.uuid, ip);
 		res.header.timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
 			p1.time_since_epoch()).count();
-		res.header.size = sizeof(res);
+		res.header.size = res.data.size();
 
 		OwnFileList.push_back(res);
 		NetFileList.push_back(res.header);
