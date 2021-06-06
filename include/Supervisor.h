@@ -14,10 +14,13 @@
 #include <atomic>
 #include "NetworkHandler.h"
 
+
+
 class Supervisor
 {
 private:
     bool shouldRun = true;
+    std::atomic<bool> stop = false;
 
     FileHandler *fileHandler;
     NetworkHandler *networkHandler;

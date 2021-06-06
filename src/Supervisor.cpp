@@ -8,6 +8,10 @@
 
 Supervisor::Supervisor() {
     fileHandler = new FileHandler();
+    tcp_downflow.setStopper(this->stop);
+    tcp_upflow.setStopper(this->stop);
+    udp_downflow.setStopper(this->stop);
+    udp_upflow.setStopper(this->stop);
     networkHandler = new NetworkHandler(tcp_upflow, tcp_downflow, udp_upflow, udp_downflow);
 }
 
