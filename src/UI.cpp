@@ -65,6 +65,8 @@ bool UI::parseCommand() {
                 std::cout<<header.name<<" "<<header.uuid<<std::endl;
             }
         }
+    } else if (tokenList[0].empty()) {
+        return true;
     } else {
         safeOutput("Invalid command");
     }

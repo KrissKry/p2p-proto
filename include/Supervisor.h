@@ -21,6 +21,7 @@ class Supervisor
 private:
     bool shouldRun = true;
     std::atomic<bool> stop = false;
+    struct in_addr ip;
 
     FileHandler *fileHandler;
     NetworkHandler *networkHandler;
@@ -45,7 +46,7 @@ private:
     void sendUpload(const Resource& res);
 
 public:
-    Supervisor();
+    Supervisor(struct in_addr);
     ~Supervisor();
     void run();
     void cleanUp();
