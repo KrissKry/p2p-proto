@@ -35,7 +35,7 @@ private:
     void udpQueueListener();
 
     void handleGetInfo();
-    void handleCreate(ResourceHeader header);
+    void handleCreate(ResourceHeader header, struct in_addr ip);
     void handleDelete(ResourceHeader resHeader);
     void handleDownload(ResourceHeader resHeader);
     void handleUpload(const Resource &res);
@@ -55,7 +55,7 @@ public:
     int downloadFile(const std::string &name);
     int deleteFile(const std::string &name);
     std::vector<Resource> listDisk();
-    std::vector<ResourceHeader> listNetwork();
+    std::vector<std::pair<struct in_addr, ResourceHeader>> listNetwork();
 };
 
 #endif //SUPERVISOR_H

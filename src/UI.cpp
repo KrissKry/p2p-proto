@@ -56,13 +56,13 @@ bool UI::parseCommand() {
             }
         }
     } else if (tokenList.size() == 2 && tokenList[0] == "list" && tokenList[1] == "net") {
-        std::vector<ResourceHeader> resourceList = supervisor->listNetwork();
+        std::vector<std::pair<struct in_addr, ResourceHeader>> resourceList = supervisor->listNetwork();
 
         if(resourceList.empty()) {
             safeOutput("No resources");
         } else {
-            for (ResourceHeader header: resourceList) {
-                std::cout<<header.name<<" "<<header.uuid<<std::endl;
+            for (std::pair<struct in_addr, ResourceHeader> res: resourceList) {
+                std::cout<<res.second.name<<" "<<res.second.uuid<<std::endl;
             }
         }
     } else if (tokenList[0].empty()) {

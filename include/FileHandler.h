@@ -8,15 +8,17 @@
 #include<fstream>
 #include "Resource.h"
 #include <cstring>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 class FileHandler {
 private:
 	std::vector <Resource> OwnFileList;
-	std::vector <ResourceHeader> NetFileList;
+	std::vector <std::pair<struct in_addr, ResourceHeader>> NetFileList;
 public:
 
 
-	ResourceHeader AddFile(const char* path, const char* name, const char* ip)
+	ResourceHeader AddFile(const char* path, const char* name, struct in_addr ip)
 	{
 
 		const auto p1 = std::chrono::system_clock::now();
@@ -45,20 +47,18 @@ public:
 		}
 
 		strcpy(res.header.name, name);
-		strcpy(res.header.uuid, ip);
+		strcpy(res.header.uuid, inet_ntoa(ip));
 		res.header.timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
 			p1.time_since_epoch()).count();
 		res.header.size = res.data.size();
 
 		OwnFileList.push_back(res);
-		NetFileList.push_back(res.header);
+		NetFileList.emplace_back(ip, res.header);
 		return res.header;
 	}
 
 	int createFile(Resource resource)
-	{
-
-		
+    {
 		const auto p1 = std::chrono::system_clock::now();
 
 
@@ -81,7 +81,6 @@ public:
 		file.close();
 
 		OwnFileList.push_back(resource);
-		NetFileList.push_back(resource.header);
 		return 1;
 	}
 
@@ -139,10 +138,10 @@ public:
 	
 	int deleteFromNetList(ResourceHeader rh)
 	{
-		std::vector <ResourceHeader>::iterator it;
+		std::vector <std::pair<struct in_addr, ResourceHeader>>::iterator it;
 		for (it = NetFileList.begin(); it != NetFileList.end(); it++)
 		{
-			if (strcmp(it->name, rh.name) == 0 && rh.uuid == it->uuid)
+			if (strcmp(it->second.name, rh.name) == 0 && rh.uuid == it->second.uuid)
 			{
 				NetFileList.erase(it);
 				return 0;
@@ -166,25 +165,18 @@ public:
 	{
 		for (auto & it : NetFileList)
 		{
-			if (strcmp(it.name, name) == 0)
+			if (strcmp(it.second.name, name) == 0)
 			{
-				return it;
+				return it.second;
 			}
 		}
 		return ResourceHeader {};
 	}
 
-    int NewFileInfo(ResourceHeader header)
+    int NewFileInfo(ResourceHeader header, struct in_addr ip)
     {
-        for (auto & it : NetFileList)
-        {
-            if (strcmp(it.name, header.name) == 0)
-            {
-                NetFileList.push_back(header);
-                return 0;
-            }
-        }
-        return 1;
+        NetFileList.emplace_back(ip, header);
+        return 0;
     }
 
 	std::vector<Resource> getOwnFileList()
@@ -192,7 +184,7 @@ public:
 		return OwnFileList;
 	}
 
-	std::vector<ResourceHeader> getNetFileList()
+	std::vector<std::pair<struct in_addr, ResourceHeader>> getNetFileList()
 	{
 		return NetFileList;
 	}
@@ -208,10 +200,10 @@ public:
 
 	void ShowNetFiles()
 	{
-		std::vector <ResourceHeader>::iterator it;
+		std::vector <std::pair<struct in_addr, ResourceHeader>>::iterator it;
 		for (it = NetFileList.begin(); it != NetFileList.end(); it++)
 		{
-			std::cout << it->name << std::endl;
+			std::cout << it->second.name << std::endl;
 		}
 	}
 

@@ -65,7 +65,7 @@ void Supervisor::udpQueueListener()
         switch (message.second.command)
         {
             case Commands::CREATE:
-                handleCreate(message.second.header);
+                handleCreate(message.second.header, message.first);
                 break;
             case Commands::DELETE:
                 handleDelete(message.second.header);
@@ -119,13 +119,12 @@ void Supervisor::sendUpload(const Resource& res) {
 }
 
 void Supervisor::handleGetInfo() {
-    std::vector<ResourceHeader> files = fileHandler->getNetFileList();
+    std::vector<std::pair<struct in_addr, ResourceHeader>> files = fileHandler->getNetFileList();
     // tcp send
 }
 
-void Supervisor::handleCreate(ResourceHeader resourceHeader) {
-    fileHandler->NewFileInfo(resourceHeader);
-    // tcp duplicate ?
+void Supervisor::handleCreate(ResourceHeader resourceHeader, struct in_addr senderIp) {
+    fileHandler->NewFileInfo(resourceHeader, senderIp);
 }
 
 void Supervisor::handleDelete(ResourceHeader resourceHeader) {
@@ -145,7 +144,7 @@ void Supervisor::handleDownload(ResourceHeader resHeader) {
 }
 
 int Supervisor::createFile(const std::string& path, const std::string& name) {
-    ResourceHeader header = fileHandler->AddFile(path.c_str(), name.c_str(), "123");
+    ResourceHeader header = fileHandler->AddFile(path.c_str(), name.c_str(), ip);
     if(strcmp(header.name, "") != 0) {
         broadcastCreate(header);
         return 0;
@@ -178,10 +177,11 @@ std::vector<Resource> Supervisor::listDisk() {
     return fileHandler->getOwnFileList();
 }
 
-std::vector<ResourceHeader> Supervisor::listNetwork() {
+std::vector<std::pair<struct in_addr, ResourceHeader>> Supervisor::listNetwork() {
     return fileHandler->getNetFileList();
 }
 
 void Supervisor::cleanUp() {
     shouldRun = false;
+    stop = true;
 }
