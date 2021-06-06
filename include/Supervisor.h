@@ -14,16 +14,18 @@
 #include <atomic>
 #include "NetworkHandler.h"
 
-class Supervisor {
+class Supervisor
+{
 private:
     bool shouldRun = true;
-    FileHandler * fileHandler;
-    NetworkHandler* networkHandler;
 
-    SyncedDeque< std::pair<int, ProtoPacket > > tcp_downflow;
-    SyncedDeque< std::pair<int, ProtoPacket > > tcp_upflow;
-    SyncedDeque< ProtoPacket > udp_downflow;
-    SyncedDeque< ProtoPacket > udp_upflow;
+    FileHandler *fileHandler;
+    NetworkHandler *network_handler;
+
+    SyncedDeque<std::pair<int, ProtoPacket>> tcp_downflow;
+    SyncedDeque<std::pair<int, ProtoPacket>> tcp_upflow;
+    SyncedDeque<ProtoPacket> udp_downflow;
+    SyncedDeque<std::pair<struct in_addr, ProtoPacket>> udp_upflow;
 
     void tcpQueueListener();
     void udpQueueListener();
@@ -51,6 +53,5 @@ public:
     std::vector<Resource> listDisk();
     std::vector<ResourceHeader> listNetwork();
 };
-
 
 #endif //SUPERVISOR_H

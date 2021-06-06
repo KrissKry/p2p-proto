@@ -52,17 +52,19 @@ void Supervisor::tcpQueueListener() {
     }
 }
 
-void Supervisor::udpQueueListener() {
-    ProtoPacket message;
-    while(shouldRun) {
+void Supervisor::udpQueueListener()
+{
+    std::pair<struct in_addr, ProtoPacket> message;
+    while (shouldRun)
+    {
         udp_upflow.pop(message);
-        switch (message.command)
+        switch (message.second.command)
         {
             case Commands::CREATE:
-                handleCreate(message.header);
+                handleCreate(message.second.header);
                 break;
             case Commands::DELETE:
-                handleDelete(message.header);
+                handleDelete(message.second.header);
                 break;
             case Commands::GET_INFO:
                 handleGetInfo();

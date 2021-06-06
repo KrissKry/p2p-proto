@@ -15,7 +15,7 @@ public:
     NetworkHandler(
         SyncedDeque<std::pair<int, ProtoPacket>> &tcp_up,
         SyncedDeque<std::pair<int, ProtoPacket>> &tcp_down,
-        SyncedDeque<ProtoPacket> &udp_up,
+        SyncedDeque<std::pair<struct in_addr, ProtoPacket>> &udp_up,
         SyncedDeque<ProtoPacket> &udp_down) : tcp_upflow(tcp_up),
                                               tcp_downflow(tcp_down),
                                               udp_upflow(udp_up),
@@ -107,41 +107,45 @@ public:
         return 0;
     }
 
-        int runTCPClientThread( ProtoPacket& packet ) {
-            int client_socket;
+    int runTCPClientThread(ProtoPacket &packet)
+    {
+        int client_socket;
 
-            if ( (client_socket = openNewSocket()) < 0) {
-                std::cout << "[ERR] " << strerror(errno);
-                return -1;
-            }
-            int client_index = spawnClient(packet, client_socket);
-
-            //send command and header
-            if( tcp_connections.at(client_index).first->sendData(client_socket, static_cast<void *>(&packet), sizeof(packet.header) + 1) < 0)
-                return -1;
-
-            //receive header
-            if (tcp_connections.at(client_index).first->receiveData(static_cast<void *>(&packet.header), sizeof(packet.header)) < 0 )
-                return -1;
-
-            //resize data accordingly
-            packet.data.resize(packet.header.size);
-            //receive data
-            if ( tcp_connections.at(client_index).first->receiveData(static_cast<void *>(&packet.data[0]), packet.data.size()) < 0 )
-                return -1;
-
-            // tcp_upflow.push(std::make_pair(client_socket, packet)) 
-            //niepotrzebne bo mamy pakiet przez refke przekazany i zakladamy ze resource jest przekazany do pakietu przez refke tez?
-
-            return 0;
+        if ((client_socket = openNewSocket()) < 0)
+        {
+            std::cout << "[ERR] " << strerror(errno);
+            return -1;
         }
+        int client_index = spawnClient(packet, client_socket);
+
+        //send command and header
+        if (tcp_connections.at(client_index).first->sendData(client_socket, static_cast<void *>(&packet), sizeof(packet.header) + 1) < 0)
+            return -1;
+
+        //receive header
+        if (tcp_connections.at(client_index).first->receiveData(static_cast<void *>(&packet.header), sizeof(packet.header)) < 0)
+            return -1;
+
+        //resize data accordingly
+        packet.data.resize(packet.header.size);
+        //receive data
+        if (tcp_connections.at(client_index).first->receiveData(static_cast<void *>(&packet.data[0]), packet.data.size()) < 0)
+            return -1;
+
+        // tcp_upflow.push(std::make_pair(client_socket, packet))
+        //niepotrzebne bo mamy pakiet przez refke przekazany i zakladamy ze resource jest przekazany do pakietu przez refke tez?
+
+        return 0;
+    }
 
     //only once at the beginning!!
-    int createNewTCPServer() {
+    int createNewTCPServer()
+    {
 
         //create server socket
         int server_socket, bind_status;
-        if ( (server_socket = openNewSocket()) < 0 ) {
+        if ((server_socket = openNewSocket()) < 0)
+        {
             std::cout << "[ERR] " << strerror(errno);
             return -1;
         }
@@ -151,11 +155,11 @@ public:
         in_addr.sin_family = AF_INET;
         in_addr.sin_port = htons(8080);
         in_addr.sin_addr.s_addr = INADDR_ANY;
-        memset( &in_addr.sin_zero, '\0', 8);
-
+        memset(&in_addr.sin_zero, '\0', 8);
 
         //bind socket with sockaddr
-        if ( (bind_status = bind(server_socket, (struct sockaddr *)&in_addr, sizeof(in_addr))) < 0) {
+        if ((bind_status = bind(server_socket, (struct sockaddr *)&in_addr, sizeof(in_addr))) < 0)
+        {
             std::cout << "[ERR] " << strerror(errno);
             return -1;
         }
@@ -165,7 +169,7 @@ public:
 
         //store information on the connection in deque
         std::lock_guard<std::mutex> lock(deque_lock);
-        tcp_connections.push_front( std::make_pair(std::move(server_ptr), server_socket) );
+        tcp_connections.push_front(std::make_pair(std::move(server_ptr), server_socket));
 
         //listen to the sound of silence
         if (tcp_connections.at(0).first->serverListen() < 0)
@@ -188,25 +192,26 @@ private:
     SyncedDeque<std::pair<int, ProtoPacket>> &tcp_downflow;
     SyncedDeque<std::pair<int, ProtoPacket>> &tcp_upflow;
     SyncedDeque<ProtoPacket> &udp_downflow;
-    SyncedDeque<ProtoPacket> &udp_upflow;
+    SyncedDeque<std::pair<struct in_addr, ProtoPacket>> &udp_upflow;
 
     bool tcp_server_running = false;
 
-    int spawnClient(ProtoPacket& packet, int client_socket) {
+    int spawnClient(ProtoPacket &packet, int client_socket)
+    {
         unsigned short dest_port = 8080;
 
         auto client_ptr = std::shared_ptr<TCPConnector>(new TCPConnector(client_socket, dest_port, packet.header.uuid));
 
         std::lock_guard<std::mutex> lock(deque_lock);
 
-        tcp_connections.push_back( std::make_pair(std::move(client_ptr), client_socket) );
+        tcp_connections.push_back(std::make_pair(std::move(client_ptr), client_socket));
 
         return tcp_connections.size() - 1;
-
     }
 
     int openNewSocket()
     {
+
         return socket(AF_INET, SOCK_STREAM, 0);
     }
 };

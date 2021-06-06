@@ -56,7 +56,7 @@ public:
             perror("sendto");
         }
     }
-    void server(SyncedDeque<ProtoPacket> &udp_upflow)
+    void server(SyncedDeque<std::pair<struct in_addr, ProtoPacket>> &udp_upflow)
     {
 
         //create udp socket
@@ -82,7 +82,6 @@ public:
         }
         while (1)
         {
-            char messageBuffer[1024];
             ProtoPacket protoPacket;
             fd_set readfds;
             struct sockaddr_in clientAddr;
@@ -101,11 +100,12 @@ public:
                     if (receivedBytes > 0)
                     {
 
-                        std::cout << protoPacket.command << std::endl;
-                        std::cout << protoPacket.header.name << std::endl;
-                        std::cout << protoPacket.header.size << std::endl;
-                        std::cout << "header size: " << sizeof(protoPacket.header) << " " << sizeof(protoPacket) << std::endl;
-                        udp_upflow.push(protoPacket);
+                        std::cout << "UDP server: " << protoPacket.command << std::endl;
+                        std::cout << "UDP server: " << protoPacket.header.name << std::endl;
+                        std::cout << "UDP server: " << protoPacket.header.size << std::endl;
+                        std::cout << "UDP server: ip:"
+                                  << inet_ntoa(clientAddr.sin_addr) << " " << typeid(clientAddr.sin_addr).name() << std::endl;
+                        udp_upflow.push(std::pair<struct in_addr, ProtoPacket>(clientAddr.sin_addr, protoPacket));
                     }
                 }
             }
