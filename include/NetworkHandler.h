@@ -148,6 +148,7 @@ public:
             return -1;
         }
         std::cout << "post setup client\n";
+        std::cout << "got header with " << header.name << " @" <<header.uuid << "\n";
         std::cout << "sending request for " << packet.header.name << " @" << packet.header.uuid << "\n"; 
         if ( (resp = tcp_connections.at(client_index).first->sendData(client_socket, static_cast<void *>(&packet.header), sizeof(packet.header))) < 0)
             return -1;
