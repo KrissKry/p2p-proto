@@ -17,7 +17,7 @@ private:
     void safeOutput(const std::string &str);
     bool parseCommand();
     Supervisor * supervisor;
-
+    void printOptions();
 public:
     void run();
     explicit UI(Supervisor *supervisor);

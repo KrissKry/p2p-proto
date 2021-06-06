@@ -12,7 +12,11 @@ UI::UI(Supervisor *supervisor): supervisor(supervisor) {
 }
 
 void UI::run() {
-    while (parseCommand());
+
+    while (parseCommand()) {
+        printOptions();
+    };
+
 }
 
 bool UI::parseCommand() {
@@ -82,4 +86,16 @@ char * UI::safeInput(char *command) {
     std::lock_guard<std::mutex> lock(cmd_tx);
     std::cin.getline(command, MAX_COMMAND_LENGTH);
     return command;
+}
+
+
+void UI::printOptions() {
+    std::cout << "~~~~~~~~~~~~~~~~~\n";
+    std::cout << "[I] ULICA WYSYŁA ZIOMECZKOM WIELKIE ELO\n";
+    std::cout << "> upload <path> as <name>\n";
+    std::cout << "> download <name>\n";
+    std::cout << "> list disk\n";
+    std::cout << "> list net\n";
+    std::cout << "> quit\n";
+    std::cout << "~~~~~~~~~~~~~~~~~\n";
 }
