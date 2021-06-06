@@ -20,7 +20,7 @@ private:
     bool shouldRun = true;
 
     FileHandler *fileHandler;
-    NetworkHandler *network_handler;
+    NetworkHandler *networkHandler;
 
     SyncedDeque<std::pair<int, ProtoPacket>> tcp_downflow;
     SyncedDeque<std::pair<int, ProtoPacket>> tcp_upflow;
