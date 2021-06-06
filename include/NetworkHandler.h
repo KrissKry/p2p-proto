@@ -2,6 +2,7 @@
 #include <thread>
 #include <mutex>
 #include <functional>
+#include <unistd.h>
 
 #include "Resource.h"
 #include "TCPConnector.h"
@@ -185,6 +186,19 @@ public:
 
         //return server connection index
         return 0;
+    }
+
+    //closes all current connections and in return makes all active connections exit with error (most likely)
+    int closeAllSockets() {
+
+        int sockets_closed = -1;
+        for (auto &connection : tcp_connections) {
+            close(connection.second);
+            ++sockets_closed;
+
+        }
+
+        return sockets_closed;
     }
 
 private:
