@@ -36,7 +36,7 @@ private:
 
     void handleGetInfo();
     void handleCreate(ResourceHeader header, struct in_addr ip);
-    void handleDelete(ResourceHeader resHeader);
+    void handleDelete(ResourceHeader resHeader, struct in_addr ip);
     void handleDownload(int fd, ResourceHeader resHeader);
     void handleUpload(const Resource &res);
     void broadcastCreate(ResourceHeader resourceHeader);

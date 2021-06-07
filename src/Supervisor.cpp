@@ -57,7 +57,6 @@ void Supervisor::tcpQueueListener()
         Resource res = {};
         res.header = message.second.header;
         res.data = message.second.data;
-        // std::cout << res.header.name << " x x x " << res.header.size << "\n";
         switch (message.second.command)
         {
         case Commands::DOWNLOAD:
@@ -87,7 +86,7 @@ void Supervisor::udpQueueListener()
             handleCreate(message.second.header, message.first);
             break;
         case Commands::DELETE:
-            handleDelete(message.second.header);
+            handleDelete(message.second.header, message.first);
             break;
         case Commands::GET_INFO:
             handleGetInfo();
@@ -104,7 +103,6 @@ void Supervisor::broadcastCreate(ResourceHeader resourceHeader)
     protoPacket.command = Commands::CREATE;
     protoPacket.header = resourceHeader;
     if (INFO_LOG) std::cout << "[I] SV:: broadcastCreate for " << resourceHeader.name << "\n";
-
     udp_downflow.push(protoPacket);
 }
 
@@ -113,8 +111,7 @@ void Supervisor::broadcastDelete(ResourceHeader resourceHeader)
     ProtoPacket protoPacket;
     protoPacket.command = Commands::DELETE;
     protoPacket.header = resourceHeader;
-
-    udp_downflow.push(protoPacket);
+//    udp_downflow.push(protoPacket);
 }
 
 void Supervisor::broadcastGetInfo(ResourceHeader resourceHeader)
@@ -157,15 +154,19 @@ void Supervisor::handleCreate(ResourceHeader resourceHeader, struct in_addr send
     fileHandler->NewFileInfo(resourceHeader, senderIp);
 }
 
-void Supervisor::handleDelete(ResourceHeader resourceHeader)
+void Supervisor::handleDelete(ResourceHeader resourceHeader, struct in_addr senderIp)
 {
-    fileHandler->deleteFromNetList(resourceHeader);
-    fileHandler->deleteNotOwnFile(resourceHeader);
+    fileHandler->deleteFromNetList(resourceHeader, senderIp);
+    int result = fileHandler->deleteNotOwnFile(resourceHeader);
+    if(result == 0)
+    {
+        broadcastDelete(resourceHeader);
+    }
 }
 
 void Supervisor::handleUpload(const Resource &res)
 {
-    int result = fileHandler->createFile(res);
+    int result = fileHandler->createFile(res, ip);
     if (result == 0) {
         broadcastCreate(res.header);
     }
@@ -175,7 +176,6 @@ void Supervisor::handleDownload(int fd, ResourceHeader resHeader)
 {
     if (DEBUG_LOG) std::cout << "[DEBUG] SV:: Handling download request for " << resHeader.name << "\n";// << resHeader.uuid << "\n";
     Resource res = fileHandler->getFile(resHeader.name);
-    // std::cout << res.header.name << " " << res.header.size << " " << res.header.uuid << "\n";
     if (strcmp(res.header.name, "") != 0)
     {
         if (DEBUG_LOG) std::cout << "[DEBUG] SV:: Res.header not empty\n";
@@ -215,10 +215,11 @@ int Supervisor::deleteFile(const std::string &name)
     {
         if(strcmp(header.uuid, inet_ntoa(ip)) == 0) {
             fileHandler->deleteOwnFile(header);
-            broadcastDelete(header);
         } else {
             fileHandler->deleteNotOwnFile(header);
         }
+        fileHandler->deleteFromNetList(header, ip);
+        broadcastDelete(header);
         return 0;
     }
     return -1;

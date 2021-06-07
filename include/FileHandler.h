@@ -59,7 +59,7 @@ public:
 		return res.header;
 	}
 
-	int createFile(Resource resource)
+	int createFile(Resource resource, struct in_addr ip)
 	{
 		const auto p1 = std::chrono::system_clock::now();
 
@@ -82,7 +82,8 @@ public:
 		file.close();
 
 		OwnFileList.push_back(resource);
-		return 0;
+        NetFileList.emplace_back(ip, resource.header);
+        return 0;
 	}
 
 	// metoda nie jest bezpieczna ale je�li wybieramy z listy to whatever
@@ -109,7 +110,6 @@ public:
 				// if (remove(rh.name) != 0)
 				// 	return 1;
 				OwnFileList.erase(it);
-				deleteFromNetList(rh);
                 return 0;
 			}
 		}
@@ -133,13 +133,13 @@ public:
 		return 1;
 	}
 
-	int deleteFromNetList(ResourceHeader rh)
+	int deleteFromNetList(ResourceHeader rh, struct in_addr ip)
 	{
 		std::vector<std::pair<struct in_addr, ResourceHeader>>::iterator it;
 		for (it = NetFileList.begin(); it != NetFileList.end(); it++)
 		{	
 			std::cout << it->second.name << " " << rh.name << "\n";
-			if (strcmp(it->second.name, rh.name) == 0)// && rh.uuid == it->second.uuid)
+            if (strcmp(it->second.name, rh.name) == 0 && strcmp(inet_ntoa(it->first), inet_ntoa(ip)) == 0)
 			{
 				NetFileList.erase(it);
 			}
