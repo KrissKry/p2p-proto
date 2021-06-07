@@ -157,11 +157,12 @@ void Supervisor::handleCreate(ResourceHeader resourceHeader, struct in_addr send
 void Supervisor::handleDelete(ResourceHeader resourceHeader, struct in_addr senderIp)
 {
     fileHandler->deleteFromNetList(resourceHeader, senderIp);
-    int result = fileHandler->deleteNotOwnFile(resourceHeader);
-    if(result == 0)
-    {
-        fileHandler->deleteFromNetList(resourceHeader, ip);
-        broadcastDelete(resourceHeader);
+    if(strcmp(resourceHeader.uuid, inet_ntoa(ip)) == 0) {
+        int result = fileHandler->deleteOwnFile(resourceHeader);
+        if (result == 0) {
+            fileHandler->deleteFromNetList(resourceHeader, ip);
+            broadcastDelete(resourceHeader);
+        }
     }
 }
 
@@ -214,13 +215,12 @@ int Supervisor::deleteFile(const std::string &name)
     ResourceHeader header = res.header;
     if (strcmp(header.name, "") != 0)
     {
-        if(strcmp(header.uuid, inet_ntoa(ip)) == 0) {
-            fileHandler->deleteOwnFile(header);
-        } else {
-            fileHandler->deleteNotOwnFile(header);
+        int result = fileHandler->deleteOwnFile(header);
+        if (result == 0)
+        {
+            fileHandler->deleteFromNetList(header, ip);
+            broadcastDelete(header);
         }
-        fileHandler->deleteFromNetList(header, ip);
-        broadcastDelete(header);
         return 0;
     }
     return -1;

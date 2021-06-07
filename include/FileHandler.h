@@ -138,7 +138,7 @@ public:
 		auto it = NetFileList.begin();
 		while (it != NetFileList.end())
 		{
-			if (strcmp(it->second.name, rh.name) == 0 && strcmp(inet_ntoa(it->first), inet_ntoa(ip)) == 0)
+			if (strcmp(it->second.name, rh.name) == 0 && (it->first.s_addr == ip.s_addr))
 			{
 				it = NetFileList.erase(it);
 			}
