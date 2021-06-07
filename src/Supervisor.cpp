@@ -39,7 +39,7 @@ void Supervisor::run()
     udpServer.detach();
     std::thread udpDownflowQueListener(&NetworkHandler::udpDownflowQueueListener, networkHandler);
     udpDownflowQueListener.detach();
-    std::cout << "udpDownlow detach" << std::endl;
+    if (DEBUG_LOG) std::cout << "[DEBUG] SV:: udpDownlow detach\n";
     tcpQueueListener.join();
     udpQueueListener.join();
 }
@@ -47,16 +47,21 @@ void Supervisor::run()
 void Supervisor::tcpQueueListener()
 {
     std::pair<int, ProtoPacket> message;
+    
     while (shouldRun)
-    {
+    {   
+        message.first = -1;
         tcp_upflow.pop(message);
+        if (DEBUG_LOG) std::cout << "[DEBUG] SV:: got command " << message.second.command << " on socket " << socket << "\n";
+
         Resource res = {};
         res.header = message.second.header;
         res.data = message.second.data;
+        // std::cout << res.header.name << " x x x " << res.header.size << "\n";
         switch (message.second.command)
         {
         case Commands::DOWNLOAD:
-            handleDownload(res.header);
+            handleDownload(message.first, res.header);
             break;
         case Commands::UPLOAD:
             handleUpload(res);
@@ -72,13 +77,13 @@ void Supervisor::udpQueueListener()
     std::pair<struct in_addr, ProtoPacket> message;
     while (shouldRun)
     {
-        std::cout << "Supervisor: udpQueueListener: waiting for message" << std::endl;
+        if (DEBUG_LOG) std::cout << "[DEBUG] SV:: udpQueueListener: waiting for message" << "\n";
         udp_upflow.pop(message);
 
         switch (message.second.command)
         {
         case Commands::CREATE:
-            std::cout << "Supervisor: udpQueueListener:switch create" << std::endl;
+            if (DEBUG_LOG) std::cout << "[DEBUG] SV:: udpQueueListener:switch create" << "\n";
             handleCreate(message.second.header, message.first);
             break;
         case Commands::DELETE:
@@ -98,7 +103,8 @@ void Supervisor::broadcastCreate(ResourceHeader resourceHeader)
     ProtoPacket protoPacket;
     protoPacket.command = Commands::CREATE;
     protoPacket.header = resourceHeader;
-    std::cout << "supervisior: broadcastCread" << std::endl;
+    if (INFO_LOG) std::cout << "[I] SV:: broadcastCreate for " << resourceHeader.name << "\n";
+
     udp_downflow.push(protoPacket);
 }
 
@@ -128,13 +134,13 @@ void Supervisor::sendDownload(ResourceHeader resourceHeader)
     tcp_downflow.push(message);
 }
 
-void Supervisor::sendUpload(const Resource &res)
+void Supervisor::sendUpload(int fd, const Resource &res)
 {
     ProtoPacket protoPacket;
     protoPacket.command = Commands::UPLOAD;
     protoPacket.header = res.header;
     protoPacket.data = res.data;
-    const std::pair message(1, protoPacket);
+    const std::pair message(fd, protoPacket);
     tcp_downflow.push(message);
 }
 
@@ -160,12 +166,15 @@ void Supervisor::handleUpload(const Resource &res)
     fileHandler->createFile(res);
 }
 
-void Supervisor::handleDownload(ResourceHeader resHeader)
+void Supervisor::handleDownload(int fd, ResourceHeader resHeader)
 {
+    if (DEBUG_LOG) std::cout << "[DEBUG] SV:: Handling download for " << resHeader.name << " @" << resHeader.uuid << "\n";
     Resource res = fileHandler->getFile(resHeader.name);
+    // std::cout << res.header.name << " " << res.header.size << " " << res.header.uuid << "\n";
     if (strcmp(res.header.name, "") != 0)
     {
-        sendUpload(res);
+        if (DEBUG_LOG) std::cout << "[DEBUG] SV:: Res.header not empty\n";
+        sendUpload(fd, res);
     }
 }
 
@@ -174,7 +183,7 @@ int Supervisor::createFile(const std::string &path, const std::string &name)
     ResourceHeader header = fileHandler->AddFile(path.c_str(), name.c_str(), ip);
     if (strcmp(header.name, "") != 0)
     {
-        std::cout << "supervisor: createFile" << std::endl;
+        if (DEBUG_LOG) std::cout << "[DEBUG] SV:: createFile\n";
         broadcastCreate(header);
         return 0;
     }
