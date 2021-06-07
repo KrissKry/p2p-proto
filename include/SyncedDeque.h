@@ -18,7 +18,11 @@ class SyncedDeque
 public:
 
     /* sets stopper variable to exit prematurely from pop lock */
-    inline void setStopper( std::atomic_bool &stopper) { this->stopper = &stopper; }
+    void setStopper( std::atomic_bool &stop) {
+        // std::cout << "Q:: "<< &stop << " " << stop << "\n";  
+        stopper = &stop; 
+        // std::cout << "Q::stopper " << stopper << " " << *stopper << "\n";
+    }
 
     /* push message to shared deque */
     void push(const T &message) {
@@ -40,8 +44,17 @@ public:
 
         std::unique_lock<std::mutex> lock(q_lock);
 
-        cv.wait(lock, [&]
-                { return !q.empty() || !this->stopper; });
+        cv.wait(lock, [this]()
+                { 
+                    // std::cout << "[WEEoo] " << typeid(T).name() << " " << stopper<< " " << ( 0 == *stopper ? "true" : "false")  << "\n";
+                    return ( (!q.empty()) || (*stopper != false) ); });
+
+        if(*stopper ) {
+            // std::cout << "[WEEEOOOWEOOO]" << *stopper << "\n";
+            return -1;
+        } else {
+            // std::cout << "[weqq] Stopper is false " << stopper << " " << *stopper << "\n";
+        }
 
         //czy typ wiadomosci jest odpowiedni dla tcp
         if constexpr (std::is_same_v<T, std::pair<int, ProtoPacket>>)
@@ -76,6 +89,10 @@ public:
             q.pop_front();
             return 0;
         }
+    }
+    bool triggerUpdate() {
+        cv.notify_all();
+        return true;
     }
 
 private:
