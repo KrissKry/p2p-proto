@@ -21,9 +21,8 @@ private:
 public:
     void broadcast(ProtoPacket protoPacket)
     {
-        //create udp socket
+
         int socketDesc = socket(AF_INET, SOCK_DGRAM, 0);
-        std::cout << "socketDesc " << socketDesc << std::endl;
 
         if (socketDesc < 0)
         {
@@ -47,6 +46,7 @@ public:
         addr.sin_port = htons(UDP_PORT);
 
         //send data
+        // int feed = sendto(socketDesc, &protoPacket, sizeof(protoPacket), 0, (struct sockaddr *)&addr, sizeof(addr));
         int feed = sendto(socketDesc, &protoPacket, sizeof(protoPacket), 0, (struct sockaddr *)&addr, sizeof(addr));
 
         if (feed < 0)
@@ -54,8 +54,9 @@ public:
             std::cout << feed << std::endl;
             perror("UDP broadcast:sendto");
         }
+        //close(socketDesc);
     }
-    void server(SyncedDeque<std::pair<struct in_addr, ProtoPacket>> &udp_upflow)
+    void server(SyncedDeque<std::pair<struct in_addr, ProtoPacket>> &udp_upflow, std::atomic_bool &stop)
     {
 
         //create udp socket
@@ -79,7 +80,7 @@ public:
             perror("bind error");
             exit(1);
         }
-        while (1)
+        while (!stop)
         {
             ProtoPacket protoPacket;
             fd_set readfds;

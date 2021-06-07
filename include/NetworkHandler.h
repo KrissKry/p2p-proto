@@ -1,3 +1,6 @@
+#ifndef TIN_NETHANDLER
+#define TIN_NETHANDLER
+
 #include <deque>
 #include <thread>
 #include <mutex>
@@ -58,9 +61,9 @@ public:
         return 0;
     }
 
-    void udpServerRun()
+    void udpServerRun(std::atomic_bool &stop)
     {
-        udpClient.server(udp_upflow);
+        udpClient.server(udp_upflow, stop);
     }
     int runUdpThread()
     {
@@ -88,29 +91,34 @@ public:
         if (tcp_connections.at(0).first->receiveData(socket, static_cast<void *>(&packet.header), sizeof(packet.header)) < 0)
             return -1; //zwroc error jakis cos
 
-        if (INFO_LOG) std::cout << "[I] NH:: Received request for " << packet.header.name << " on socket " << socket << "\n";
+        if (INFO_LOG)
+            std::cout << "[I] NH:: Received request for " << packet.header.name << " on socket " << socket << "\n";
 
         auto pair = std::make_pair(socket, packet);
-        
+
         //send request for a file
         // std::cout << "PUSH: komenda:" << pair.second.command << " " << pair.second.header.name << "\n";
         tcp_upflow.push(pair);
         // std::cout << "pushed and try popping now:\n";
         //wait for response for our socket
-        while (tcp_downflow.pop(pair) < 0) {}
+        while (tcp_downflow.pop(pair) < 0)
+        {
+        }
 
         packet.data = pair.second.data;
         /*std::cout << "Got packet with resource name: " << pair.second.header.name << "\n";
         std::cout << "packet vector size: " << pair.second.data.size() << "\n";
         std::cout << "Got packet with resource name: " << packet.header.name << "\n";
         std::cout << "packet vector size: " << packet.data.size() << "\n";*/
-        if (INFO_LOG) std::cout << "[I] NH:: Got response from SV " << pair.second.header.name << "\n";
+        if (INFO_LOG)
+            std::cout << "[I] NH:: Got response from SV " << pair.second.header.name << "\n";
 
         //send packet header
         if (tcp_connections.at(0).first->sendData(socket, static_cast<void *>(&pair.second.header), sizeof(pair.second.header)) < 0)
             return -1;
 
-        if (INFO_LOG) std::cout << "[I] NH:: Beginning transmission of data from " << pair.second.header.name << "\n";
+        if (INFO_LOG)
+            std::cout << "[I] NH:: Beginning transmission of data from " << pair.second.header.name << "\n";
         //send packet data
         if (tcp_connections.at(0).first->sendData(socket, static_cast<void *>(&pair.second.data[0]), pair.second.data.size()) < 0)
             return -1;
@@ -118,10 +126,11 @@ public:
         // close(socket);
         return 0;
     }
-    void udpDownflowQueueListener()
+    void udpDownflowQueueListener(std::atomic_bool &stop)
     {
         ProtoPacket message;
-        while (true)
+        memset(&message, 0, sizeof(ProtoPacket));
+        while (!stop)
         {
             // std::cout<<"NetworkHandler: udpDownflow waiting for message"<<std::endl;
             udp_downflow.pop(message);
@@ -130,9 +139,9 @@ public:
         }
     }
 
-    int runTCPClientThread(const ResourceHeader& header)
-    {   
-        ProtoPacket packet {};
+    int runTCPClientThread(const ResourceHeader &header)
+    {
+        ProtoPacket packet{};
         packet.command = Commands::UPLOAD; //RECEIVE
         packet.header = header;
 
@@ -148,20 +157,22 @@ public:
         //send header
         // std::cout << "Socket:" << client_socket << " index" << client_index << "\n";
         // std::cout << header.name << " " << header.size << " " << header.uuid << "\n";
-        // std::cout << "packet " << &packet <<  " packet header: " << &packet.header << " rozmiar:" << sizeof(packet.header) << std::endl; 
+        // std::cout << "packet " << &packet <<  " packet header: " << &packet.header << " rozmiar:" << sizeof(packet.header) << std::endl;
         packet.data.resize(packet.header.size);
         // std::cout << "dane rozmiar: " << packet.data.size() << " @" << &packet.data << " " << &packet.data[0] << "\n";
-        int resp {};
-        if ( tcp_connections.at(client_index).first->setupClient() < 0) {
+        int resp{};
+        if (tcp_connections.at(client_index).first->setupClient() < 0)
+        {
             strerror(errno);
             return -1;
         }
         // std::cout << "post setup client\n";
         // std::cout << "got header with " << header.name << " @" <<header.uuid << "\n";
-        // std::cout << "sending request for " << packet.header.name << " @" << packet.header.uuid << "\n"; 
-        if (INFO_LOG) std::cout << "[I] NH:: Sending request for " << packet.header.name << " on socket " << client_socket << "\n";
+        // std::cout << "sending request for " << packet.header.name << " @" << packet.header.uuid << "\n";
+        if (INFO_LOG)
+            std::cout << "[I] NH:: Sending request for " << packet.header.name << " on socket " << client_socket << "\n";
 
-        if ( (resp = tcp_connections.at(client_index).first->sendData(client_socket, static_cast<void *>(&packet.header), sizeof(packet.header))) < 0)
+        if ((resp = tcp_connections.at(client_index).first->sendData(client_socket, static_cast<void *>(&packet.header), sizeof(packet.header))) < 0)
             return -1;
         // std::cout << "resp: " << resp << "\n";
 
@@ -169,7 +180,8 @@ public:
         if (tcp_connections.at(client_index).first->receiveData(0, static_cast<void *>(&packet.header), sizeof(packet.header)) < 0)
             return -1;
 
-        if (INFO_LOG) std::cout << "[I] NH:: Received confirmation for " << packet.header.name << " on socket " << socket << "\n";
+        if (INFO_LOG)
+            std::cout << "[I] NH:: Received confirmation for " << packet.header.name << " on socket " << socket << "\n";
 
         //resize data accordingly
         packet.data.resize(packet.header.size);
@@ -178,7 +190,8 @@ public:
         if (tcp_connections.at(client_index).first->receiveData(0, static_cast<void *>(&packet.data[0]), packet.data.size()) < 0)
             return -1;
 
-        if (INFO_LOG) std::cout << "[I] NH:: Received "<< packet.data.size() << " bytes of " << packet.header.name << " on socket " << socket << "\n";
+        if (INFO_LOG)
+            std::cout << "[I] NH:: Received " << packet.data.size() << " bytes of " << packet.header.name << " on socket " << socket << "\n";
 
         tcp_upflow.push(std::make_pair(client_socket, packet));
         //EDIT:JEDNAK POTRZEBNA XD niepotrzebne bo mamy pakiet przez refke przekazany i zakladamy ze resource jest przekazany do pakietu przez refke tez?
@@ -234,15 +247,17 @@ public:
     }
 
     //closes all current connections and in return makes all active connections exit with error (most likely)
-    int closeAllSockets() {
+    int closeAllSockets()
+    {
 
-        if (DEBUG_LOG) std::cout << "[DEBUG] NH:: Closing all sockets\n";
+        if (DEBUG_LOG)
+            std::cout << "[DEBUG] NH:: Closing all sockets\n";
 
         int sockets_closed = -1;
-        for (auto &connection : tcp_connections) {
+        for (auto &connection : tcp_connections)
+        {
             close(connection.second);
             ++sockets_closed;
-
         }
 
         return sockets_closed;
@@ -263,7 +278,6 @@ private:
 
     bool tcp_server_running = false;
 
-
     int spawnClient(const ResourceHeader &header, int client_socket)
     {
         unsigned short dest_port = 8080;
@@ -272,20 +286,23 @@ private:
 
         std::lock_guard<std::mutex> lock(deque_lock);
 
-        if (DEBUG_LOG) std::cout << "[DEBUG] NH:: Spawned new TCP Client with socket " << client_socket << " and remote " << header.uuid << "\n";
+        if (DEBUG_LOG)
+            std::cout << "[DEBUG] NH:: Spawned new TCP Client with socket " << client_socket << " and remote " << header.uuid << "\n";
 
         tcp_connections.push_back(std::make_pair(std::move(client_ptr), client_socket));
 
         return tcp_connections.size() - 1;
     }
 
-
     int openNewSocket()
     {
         int sock = socket(AF_INET, SOCK_STREAM, 0);
 
-        if (DEBUG_LOG) std::cout << "[DEBUG] NH:: Opened socket " << sock << "\n";
+        if (DEBUG_LOG)
+            std::cout << "[DEBUG] NH:: Opened socket " << sock << "\n";
 
         return sock;
     }
 };
+
+#endif

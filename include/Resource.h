@@ -16,7 +16,7 @@ namespace Commands
     const char DUPLICATE = '8';
 
 }
-
+#pragma pack(push, 1)
 struct ResourceHeader
 {
     char name[255];
@@ -24,19 +24,19 @@ struct ResourceHeader
     char uuid[16];
     uint64_t timestamp;
 };
-
+#pragma pack(pop)
 struct Resource
 {
     struct ResourceHeader header;
     // char *data;
     std::vector<unsigned char> data;
 };
-
+#pragma pack(push, 1)
 struct ProtoPacket
 {
     char command;
     struct ResourceHeader header;
     std::vector<unsigned char> data;
 };
-
+#pragma pack(pop)
 #endif

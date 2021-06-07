@@ -6,14 +6,14 @@
 #define SUPERVISOR_H
 
 #include <mutex>
-#include "Resource.h"
-#include "FileHandler.h"
-#include "SyncedDeque.h"
 #include <deque>
 #include <condition_variable>
 #include <atomic>
-#include "NetworkHandler.h"
 #include "Constants.h"
+#include "Resource.h"
+#include "SyncedDeque.h"
+#include "NetworkHandler.h"
+#include "FileHandler.h"
 
 
 class Supervisor

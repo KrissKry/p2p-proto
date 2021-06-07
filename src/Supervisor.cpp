@@ -9,10 +9,12 @@
 Supervisor::Supervisor(struct in_addr ip) : ip(ip)
 {
     fileHandler = new FileHandler();
-    tcp_downflow.setStopper(this->stop);
-    tcp_upflow.setStopper(this->stop);
-    udp_downflow.setStopper(this->stop);
-    udp_upflow.setStopper(this->stop);
+    // std::cout << "SV:: " << &stop << " " << stop << "\n";
+    tcp_downflow.setStopper(std::ref(this->stop));
+    tcp_upflow.setStopper(std::ref(this->stop));
+    // stop = true;
+    udp_downflow.setStopper(std::ref(this->stop));
+    udp_upflow.setStopper(std::ref(this->stop));
     networkHandler = new NetworkHandler(tcp_upflow, tcp_downflow, udp_upflow, udp_downflow);
 }
 
@@ -27,17 +29,24 @@ void Supervisor::run()
     // start network connector
     std::thread tcpQueueListener(&Supervisor::tcpQueueListener, this);
     std::thread udpQueueListener(&Supervisor::udpQueueListener, this);
-
+    std::cout << "          tcpQueueListener " << tcpQueueListener.get_id() << "\n";
+    std::cout << "          udpQueueListener " << udpQueueListener.get_id() << "\n";
     int res = networkHandler->createNewTCPServer();
     if (res == 0)
     {
         std::thread tcpServer(&NetworkHandler::handleTCPServer, networkHandler, 0);
+        std::cout << "          tcpServer " << tcpServer.get_id() << "\n";
+
         tcpServer.detach();
     }
 
-    std::thread udpServer(&NetworkHandler::udpServerRun, networkHandler);
+    std::thread udpServer(&NetworkHandler::udpServerRun, networkHandler, std::ref(this->stop));
+    std::cout << "          udpServer " << udpServer.get_id() << "\n";
+
     udpServer.detach();
-    std::thread udpDownflowQueListener(&NetworkHandler::udpDownflowQueueListener, networkHandler);
+    std::thread udpDownflowQueListener(&NetworkHandler::udpDownflowQueueListener, networkHandler, std::ref(this->stop));
+    std::cout << "          udpDownflowQueListener " << udpDownflowQueListener.get_id() << "\n";
+
     udpDownflowQueListener.detach();
     if (DEBUG_LOG)
         std::cout << "[DEBUG] SV:: udpDownlow detach\n";
@@ -49,12 +58,14 @@ void Supervisor::tcpQueueListener()
 {
     std::pair<int, ProtoPacket> message;
 
-    while (shouldRun)
+    while (!stop)
     {
         message.first = -1;
         tcp_upflow.pop(message);
         if (DEBUG_LOG)
             std::cout << "[DEBUG] SV:: got command " << message.second.command << " on socket " << socket << "\n";
+        if (stop)
+            return;
 
         Resource res = {};
         res.header = message.second.header;
@@ -76,13 +87,15 @@ void Supervisor::tcpQueueListener()
 void Supervisor::udpQueueListener()
 {
     std::pair<struct in_addr, ProtoPacket> message;
-    while (shouldRun)
+    while (!stop)
     {
         if (DEBUG_LOG)
             std::cout << "[DEBUG] SV:: udpQueueListener: waiting for message"
                       << "\n";
         udp_upflow.pop(message);
-
+        if (stop)
+            return;
+        std::cout << "UDP Upflow unblocked \n";
         switch (message.second.command)
         {
         case Commands::CREATE:
@@ -106,8 +119,11 @@ void Supervisor::udpQueueListener()
 void Supervisor::broadcastCreate(ResourceHeader resourceHeader)
 {
     ProtoPacket protoPacket;
+    //to avoid pointing to uninitialized bytes
+    memset(&protoPacket, 0, sizeof(ProtoPacket));
     protoPacket.command = Commands::CREATE;
     protoPacket.header = resourceHeader;
+
     if (INFO_LOG)
         std::cout << "[I] SV:: broadcastCreate for " << resourceHeader.name << "\n";
     udp_downflow.push(protoPacket);
@@ -116,16 +132,22 @@ void Supervisor::broadcastCreate(ResourceHeader resourceHeader)
 void Supervisor::broadcastDelete(ResourceHeader resourceHeader)
 {
     ProtoPacket protoPacket;
+    memset(&protoPacket, 0, sizeof(ProtoPacket));
     protoPacket.command = Commands::DELETE;
     protoPacket.header = resourceHeader;
+    // std::vector<unsigned char> data;
+    // protoPacket.data = data;
     udp_downflow.push(protoPacket);
 }
 
 void Supervisor::broadcastGetInfo(ResourceHeader resourceHeader)
 {
     ProtoPacket protoPacket;
+    memset(&protoPacket, 0, sizeof(ProtoPacket));
     protoPacket.command = Commands::GET_INFO;
     protoPacket.header = resourceHeader;
+    // std::vector<unsigned char> data;
+    // protoPacket.data = data;
     udp_downflow.push(protoPacket);
 }
 
@@ -254,5 +276,12 @@ std::vector<std::pair<struct in_addr, ResourceHeader>> Supervisor::listNetwork()
 void Supervisor::cleanUp()
 {
     shouldRun = false;
+    std::cout << "[SV] STOP " << stop << " @" << &stop << "\n";
     stop = true;
+    std::cout << "[SV] STOP " << stop << " @" << &stop << "\n";
+    udp_downflow.triggerUpdate();
+    udp_upflow.triggerUpdate();
+    tcp_upflow.triggerUpdate();
+    tcp_downflow.triggerUpdate();
+    networkHandler->closeAllSockets();
 }
