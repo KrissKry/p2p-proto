@@ -137,8 +137,9 @@ public:
 	{
 		std::vector<std::pair<struct in_addr, ResourceHeader>>::iterator it;
 		for (it = NetFileList.begin(); it != NetFileList.end(); it++)
-		{
-			if (strcmp(it->second.name, rh.name) == 0 && rh.uuid == it->second.uuid)
+		{	
+			std::cout << it->second.name << " " << rh.name << "\n";
+			if (strcmp(it->second.name, rh.name) == 0)// && rh.uuid == it->second.uuid)
 			{
 				NetFileList.erase(it);
 			}
