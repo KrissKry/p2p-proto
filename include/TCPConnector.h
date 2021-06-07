@@ -17,140 +17,43 @@ class TCPConnector {
 
 
     public:
-        TCPConnector(int socket, unsigned short port, const char* address) {
+        /* used when creating a client */
+        explicit TCPConnector(int socket, unsigned short port, const char* address);
 
-            remote_addr.sin_port = htons(port);
-
-            remote_addr.sin_addr.s_addr = inet_addr(address);
-            remote_addr.sin_family = AF_INET;
-            memset(&(remote_addr.sin_zero), '\0', 8);
-
-            // std::cout << remote_addr.sin_port << " " << remote_addr.sin_addr.s_addr << " " << address << std::endl;
-
-            this->socket = socket;
-            this->port = port;
-            this->address = address;
-            // int status = connect(socket, &remote_addr,  socklen_t addrlen);
-        }
-
-        TCPConnector(int socket, const struct sockaddr_in &addr) {
-            this->socket = socket;
-            this->remote_addr = addr;
-        }
+        /* used when creating a server*/
+        explicit TCPConnector(int socket, const struct sockaddr_in &addr);
 
         ~TCPConnector() {}
 
+        /* connects() client to remote addr */ 
+        int setupClient();
 
-        int setupClient() {
-            int error;
-            // std::cout << "TCP:: setting up client\n";
-            if ( (error = connect(this->socket, (struct sockaddr *)&remote_addr, sizeof(remote_addr))) < 0 ) {
-                printError();
-                return -1;
-            }
-            // std::cout << "TCP:: set client with " << error << "\n";
-                return 0;
-        }
+        /* begins tcp server listening */
+        int serverListen();
 
+        /*
+        *   accept incoming connection on server socket from any IP
+        *   returns file descriptor for the connection or -1 on error
+        */
+        int serverAccept();
 
-        int serverListen() {
-            if( listen(socket, 10) < 0 ) {
-                printError();
-                return -1;
-            }
-            if (DEBUG_LOG) std::cout << "[I] TCP:: Listening on " << remote_addr.sin_addr.s_addr << ":" << remote_addr.sin_port << "\n";
-            return 0;
-        }
+        /*
+        *   send >data_size< bytes from memory @ptr on >sockfd<
+        *   returns 0 on success, -1 on error
+        */
+        int sendData(int sockfd, void *ptr, unsigned long long data_size);
 
-
-        int serverAccept() {
-            //wyslac żądanie o wątek na obsłużenie wysyłania pliku czy coś
-            int receiver;
-            socklen_t len = sizeof(remote_addr);
-
-            if ( (receiver = accept(socket, (struct sockaddr *)&remote_addr, &len)) < 0 ) {
-                printError();
-                return -1;
-            }
-
-            //zwrocenie deskryptora socketu do wysylania danych
-            return receiver;
-        }
-
-
-        int sendData(int sockfd, void *ptr, unsigned long long data_size) {
-            int bytes_sent = 0;
-            void* data_ptr = ptr;
-            // std::cout << "TCP: sendData() @" << sockfd << " " << ptr << " " << data_ptr << " " << data_size << "\n";
-            int error_code;
-            unsigned int error_code_size = sizeof(error_code);
-            int sockopt = getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &error_code, &error_code_size);
-            // std::cout << error_code << " " << error_code_size << " " << sockopt << "\n";
-            // std::cout << strerror(error_code) << "\n";
-            if (INFO_LOG) std::cout << "[I] TCP:: Beginning upload of " << data_size << " bytes.\n"; 
-            while( (bytes_sent = send(sockfd, data_ptr, data_size, 0) ) > 0) {
-
-                // std::cout << "[I] TCP:: Sent " << bytes_sent << " bytes\n";
-                data_size -= bytes_sent;
-
-                if (data_size < 1) {
-                    if (INFO_LOG) std::cout << "[I] TCP:: Sent all bytes. Exiting sendData()\n";
-                    return 0;
-                }
-                data_ptr = static_cast<char*>(data_ptr) + bytes_sent;
-            }
-
-
-            if (bytes_sent < 0) {
-                printError();
-                return -1;
-            } else {
-                return 0;
-            }
-        }
-
-
-        int receiveData(int fd, void *ptr, unsigned long long data_size) {
-            int bytes_received = 0;
-            void* data_ptr = ptr;
-            int recv_fd;
-            if (fd != 0)
-                recv_fd = fd;
-            else
-                recv_fd = this->socket;
-
-            // std::cout << "TCP: receiveData() @" << recv_fd << " " << ptr << " " << data_ptr << " " << data_size << "\n";
-            // std::cout << ptr << " " << data_ptr << "\n";
-            if (INFO_LOG) std::cout << "[I] TCP:: Beginning download of " << data_size << " bytes.\n"; 
-
-            while( (bytes_received = recv(recv_fd, data_ptr, data_size, 0)) > 0) {
-
-                // std::cout << "[I] TCP:: Received " << bytes_received << " bytes\n";
-                data_size -= bytes_received;
-
-                if (data_size < 1) {
-                    std::cout << "[I] Exiting receiveData()\n";
-
-                    return 0;
-                }
-
-                data_ptr = static_cast<char*>(data_ptr) + bytes_received;
-            }
-
-
-            if (bytes_received < 0) {
-                printError();
-                return -1;
-            } else {
-                return 0;
-            }
-        }
+        /*
+        *   receive >data_size< bytes into memory @ptr from socket >fd<
+        */
+        int receiveData(int fd, void *ptr, unsigned long long data_size);
         
+
     private:
         int socket;
         unsigned short port;
         const char* address;
-        sockaddr_in remote_addr;
+        sockaddr_in addr;
 
         void printError() {
             std::cout << "[ERR] " << strerror(errno) << "\n";

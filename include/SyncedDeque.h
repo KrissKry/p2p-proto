@@ -1,33 +1,31 @@
 #ifndef TIN_SYNCDEQ
 #define TIN_SYNCDEQ
 
+#include <iostream>
 #include <deque>
 #include <mutex>
 #include <condition_variable>
 #include <type_traits>
 #include <atomic>
-
+#include "Resource.h"
 #include "Constants.h"
-// dla TCP zalozenie ze ProtoPacket moze miec puste pole data czy jakoś tak ;-;
-// dla TCP w górę T : std::pair<int, ProtoPacket >
-// dla TCP w dół T: std::pair< int, ProtoPacket >
-// dla UDP T : ProtoPacket
 
 template <typename T>
 class SyncedDeque
 {
-
     //https://stackoverflow.com/questions/20516773/stdunique-lockstdmutex-or-stdlock-guardstdmutex
     //https://stackoverflow.com/questions/43019598/stdlock-guard-or-stdscoped-lock
 public:
-    // SyncedDeque () {}
-    // SyncedDeque (std::atomic_bool &stopper) {
-    //     this->stopper = stopper;
-    // }
-    void setStopper( std::atomic_bool &stopper) { this->stopper = &stopper; }
 
-    void push(const T &message)
-    {
+    /* sets stopper variable to exit prematurely from pop lock */
+    void setStopper( std::atomic_bool &stop) {
+        // std::cout << "Q:: "<< &stop << " " << stop << "\n";  
+        stopper = &stop; 
+        // std::cout << "Q::stopper " << stopper << " " << *stopper << "\n";
+    }
+
+    /* push message to shared deque */
+    void push(const T &message) {
         std::unique_lock<std::mutex> lock(q_lock);
         q.push_back(message);
 
@@ -41,13 +39,22 @@ public:
         cv.notify_one();
     }
 
-    int pop(T &message)
-    {   
+    /* pop message from shared deque if there is any */
+    int pop(T &message) {   
 
         std::unique_lock<std::mutex> lock(q_lock);
 
-        cv.wait(lock, [&]
-                { return !q.empty() || !this->stopper; });
+        cv.wait(lock, [this]()
+                { 
+                    // std::cout << "[WEEoo] " << typeid(T).name() << " " << stopper<< " " << ( 0 == *stopper ? "true" : "false")  << "\n";
+                    return ( (!q.empty()) || (*stopper != false) ); });
+
+        if(*stopper ) {
+            // std::cout << "[WEEEOOOWEOOO]" << *stopper << "\n";
+            return -1;
+        } else {
+            // std::cout << "[weqq] Stopper is false " << stopper << " " << *stopper << "\n";
+        }
 
         //czy typ wiadomosci jest odpowiedni dla tcp
         if constexpr (std::is_same_v<T, std::pair<int, ProtoPacket>>)
@@ -83,7 +90,10 @@ public:
             return 0;
         }
     }
-    // auto it = std::find_if(q.begin(), q.end(), [socket] (const auto& pair) { return pair.first == socket; } );
+    bool triggerUpdate() {
+        cv.notify_all();
+        return true;
+    }
 
 private:
     std::atomic_bool* stopper;

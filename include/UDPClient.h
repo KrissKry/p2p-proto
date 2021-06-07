@@ -54,8 +54,9 @@ public:
             std::cout << feed << std::endl;
             perror("UDP broadcast:sendto");
         }
+        close(socketDesc);
     }
-    void server(SyncedDeque<std::pair<struct in_addr, ProtoPacket>> &udp_upflow)
+    void server(SyncedDeque<std::pair<struct in_addr, ProtoPacket>> &udp_upflow, std::atomic_bool& stop)
     {
 
         //create udp socket
@@ -79,7 +80,7 @@ public:
             perror("bind error");
             exit(1);
         }
-        while (1)
+        while (!stop)
         {
             ProtoPacket protoPacket;
             fd_set readfds;

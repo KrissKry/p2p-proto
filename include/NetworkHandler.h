@@ -1,3 +1,6 @@
+#ifndef TIN_NETHANDLER
+#define TIN_NETHANDLER
+
 #include <deque>
 #include <thread>
 #include <mutex>
@@ -58,9 +61,9 @@ public:
         return 0;
     }
 
-    void udpServerRun()
+    void udpServerRun(std::atomic_bool &stop)
     {
-        udpClient.server(udp_upflow);
+        udpClient.server(udp_upflow, stop);
     }
     int runUdpThread()
     {
@@ -118,10 +121,10 @@ public:
         // close(socket);
         return 0;
     }
-    void udpDownflowQueueListener()
+    void udpDownflowQueueListener(std::atomic_bool &stop)
     {
         ProtoPacket message;
-        while (true)
+        while (!stop)
         {
             // std::cout<<"NetworkHandler: udpDownflow waiting for message"<<std::endl;
             udp_downflow.pop(message);
@@ -289,3 +292,7 @@ private:
         return sock;
     }
 };
+
+
+
+#endif
