@@ -104,13 +104,14 @@ public:
 		std::vector<Resource>::iterator it;
 		for (it = OwnFileList.begin(); it != OwnFileList.end(); it++)
 		{
-			if (strcmp(it->header.name, rh.name) == 0 && rh.uuid == it->header.uuid)
+			if (strcmp(it->header.name, rh.name) == 0)
 			{
-				if (remove(rh.name) != 0)
-					return 1;
+				if (remove(rh.name) != 0) {
+                    return 1;
+				}
 				OwnFileList.erase(it);
 				deleteFromNetList(rh);
-				return 0;
+                return 0;
 			}
 		}
 		return 1;
@@ -122,7 +123,7 @@ public:
 		std::vector<Resource>::iterator it;
 		for (it = OwnFileList.begin(); it != OwnFileList.end(); it++)
 		{
-			if (strcmp(it->header.name, rh.name) == 0 && rh.uuid == it->header.uuid)
+			if (strcmp(it->header.name, rh.name) == 0)
 			{
 				if (remove(rh.name) != 0)
 					return 1;

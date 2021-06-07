@@ -212,7 +212,7 @@ int Supervisor::deleteFile(const std::string &name)
     ResourceHeader header = res.header;
     if (strcmp(header.name, "") != 0)
     {
-        if(header.uuid == inet_ntoa(ip)) {
+        if(strcmp(header.uuid, inet_ntoa(ip)) == 0) {
             fileHandler->deleteOwnFile(header);
             broadcastDelete(header);
         } else {
