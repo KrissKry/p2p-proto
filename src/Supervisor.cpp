@@ -135,7 +135,7 @@ void Supervisor::broadcastDelete(ResourceHeader resourceHeader)
     memset(&protoPacket, 0, sizeof(ProtoPacket));
     protoPacket.command = Commands::DELETE;
     protoPacket.header = resourceHeader;
-    protoPacket.data.resize(0);
+    // protoPacket.data.resize(0);
 
     udp_downflow.push(protoPacket);
 }
@@ -146,7 +146,7 @@ void Supervisor::broadcastGetInfo(ResourceHeader resourceHeader)
     memset(&protoPacket, 0, sizeof(ProtoPacket));
     protoPacket.command = Commands::GET_INFO;
     protoPacket.header = resourceHeader;
-    protoPacket.data.resize(0);
+    // protoPacket.data.resize(0);
     udp_downflow.push(protoPacket);
 }
 
@@ -155,7 +155,7 @@ void Supervisor::sendDownload(ResourceHeader resourceHeader)
     ProtoPacket protoPacket;
     protoPacket.command = Commands::DOWNLOAD;
     protoPacket.header = resourceHeader;
-    protoPacket.data.resize(0);
+    // protoPacket.data.resize(0);
 
     const std::pair message(1, protoPacket);
     tcp_downflow.push(message);

@@ -176,7 +176,6 @@ public:
 	{
 		for (auto &it : NetFileList)
 		{
-			if (HELP_LOG) std::cout << "FH:: __NAME__ || ___OWNER_IP___ || ___COPY_IP___\n";
 			if (strcmp(it.second.name, header.name) == 0 && (it.first.s_addr == ip.s_addr))
 			{
 				if (HELP_LOG) std::cout << "FH:: "<< header.name<< " || " << inet_ntoa(it.first) << " || " << inet_ntoa(ip) << "\n";
@@ -199,19 +198,22 @@ public:
 
 	void ShowOwnFiles()
 	{
+		if (HELP_LOG) std::cout << "FH:: __NAME__\n";
 		std::vector<Resource>::iterator it;
 		for (it = OwnFileList.begin(); it != OwnFileList.end(); it++)
 		{
-			std::cout << it->header.name << std::endl;
+			std::cout << "   " << it->header.name << "\n";
 		}
 	}
 
 	void ShowNetFiles()
 	{
+		if (HELP_LOG) std::cout << "FH:: __NAME__ || ___OWNER_IP___ || ___COPY_IP___\n";
+
 		std::vector<std::pair<struct in_addr, ResourceHeader>>::iterator it;
 		for (it = NetFileList.begin(); it != NetFileList.end(); it++)
 		{
-			std::cout << it->second.name << std::endl;
+			std::cout << it->second.name << " || " << it->second.uuid << " || " << it->first.s_addr << std::endl;
 		}
 	}
 };
