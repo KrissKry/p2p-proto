@@ -82,8 +82,8 @@ public:
 		file.close();
 
 		OwnFileList.push_back(resource);
-        NetFileList.emplace_back(ip, resource.header);
-        return 0;
+		NetFileList.emplace_back(ip, resource.header);
+		return 0;
 	}
 
 	// metoda nie jest bezpieczna ale je�li wybieramy z listy to whatever
@@ -110,7 +110,7 @@ public:
 				// if (remove(rh.name) != 0)
 				// 	return 1;
 				OwnFileList.erase(it);
-                return 0;
+				return 0;
 			}
 		}
 		return 1;
@@ -119,7 +119,7 @@ public:
 	// metoda do usuwania pliku je�li nie jeste�my tw�rc� a mamy go na swoim dysku
 	int deleteNotOwnFile(ResourceHeader rh)
 	{
-        std::vector<Resource>::iterator it;
+		std::vector<Resource>::iterator it;
 		for (it = OwnFileList.begin(); it != OwnFileList.end(); it++)
 		{
 			if (strcmp(it->header.name, rh.name) == 0)
@@ -135,16 +135,17 @@ public:
 
 	int deleteFromNetList(ResourceHeader rh, struct in_addr ip)
 	{
-        auto it = NetFileList.begin();
-        while (it != NetFileList.end())
+		auto it = NetFileList.begin();
+		while (it != NetFileList.end())
 		{
-            if (strcmp(it->second.name, rh.name) == 0 && strcmp(inet_ntoa(it->first), inet_ntoa(ip)) == 0)
+			if (strcmp(it->second.name, rh.name) == 0 && strcmp(inet_ntoa(it->first), inet_ntoa(ip)) == 0)
 			{
 				it = NetFileList.erase(it);
-			} else
+			}
+			else
 			{
-                ++it;
-            }
+				++it;
+			}
 		}
 		return 0;
 	}
@@ -173,13 +174,15 @@ public:
 
 	int NewFileInfo(ResourceHeader header, struct in_addr ip)
 	{
-        for (auto &it : NetFileList)
-        {
-            if (strcmp(it.second.name, header.name) == 0 && strcmp(inet_ntoa(it.first), inet_ntoa(ip)) == 0)
-            {
-                return -1;
-            }
-        }
+		for (auto &it : NetFileList)
+		{
+			std::cout << "fileHander newfileinfo\n";
+			if (strcmp(it.second.name, header.name) == 0 && (it.first.s_addr == ip.s_addr))
+			{
+				std::cout << "fileHander newfileinfo IF " << inet_ntoa(it.first) << " " << inet_ntoa(ip) << " " << std::endl;
+				return -1;
+			}
+		}
 		NetFileList.emplace_back(ip, header);
 		return 0;
 	}
