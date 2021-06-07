@@ -1,3 +1,6 @@
+#ifndef TIN_NETHANDLER
+#define TIN_NETHANDLER
+
 #include <deque>
 #include <thread>
 #include <mutex>
@@ -289,3 +292,7 @@ private:
         return sock;
     }
 };
+
+
+
+#endif
