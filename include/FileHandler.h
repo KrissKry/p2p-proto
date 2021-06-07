@@ -171,6 +171,13 @@ public:
 
 	int NewFileInfo(ResourceHeader header, struct in_addr ip)
 	{
+        for (auto &it : NetFileList)
+        {
+            if (strcmp(it.second.name, header.name) == 0 && strcmp(inet_ntoa(it.first), inet_ntoa(ip)) == 0)
+            {
+                return -1;
+            }
+        }
 		NetFileList.emplace_back(ip, header);
 		return 0;
 	}

@@ -66,7 +66,7 @@ bool UI::parseCommand() {
             safeOutput("No resources");
         } else {
             for (std::pair<struct in_addr, ResourceHeader> res: resourceList) {
-                std::cout<<res.second.name<<" "<<res.second.uuid<<std::endl;
+                std::cout << res.second.name << " " << res.second.uuid << " " << inet_ntoa(res.first) << std::endl;
             }
         }
     } else if (tokenList[0].empty()) {
