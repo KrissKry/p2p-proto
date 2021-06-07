@@ -10,12 +10,8 @@
 #include <iostream>
 #include <sys/socket.h>
 
-
+#include "Constants.h"
 #include "Resource.h"
-
-// enum connection_type {
-//     SEND, RECEIVE
-// };
 
 class TCPConnector {
 
@@ -29,7 +25,7 @@ class TCPConnector {
             remote_addr.sin_family = AF_INET;
             memset(&(remote_addr.sin_zero), '\0', 8);
 
-            std::cout << remote_addr.sin_port << " " << remote_addr.sin_addr.s_addr << " " << address << std::endl;
+            // std::cout << remote_addr.sin_port << " " << remote_addr.sin_addr.s_addr << " " << address << std::endl;
 
             this->socket = socket;
             this->port = port;
@@ -47,12 +43,12 @@ class TCPConnector {
 
         int setupClient() {
             int error;
-            std::cout << "TCP:: setting up client\n";
+            // std::cout << "TCP:: setting up client\n";
             if ( (error = connect(this->socket, (struct sockaddr *)&remote_addr, sizeof(remote_addr))) < 0 ) {
                 printError();
                 return -1;
             }
-            std::cout << "TCP:: set client with " << error << "\n";
+            // std::cout << "TCP:: set client with " << error << "\n";
                 return 0;
         }
 
@@ -62,7 +58,7 @@ class TCPConnector {
                 printError();
                 return -1;
             }
-            std::cout << "[I] Listening on " << remote_addr.sin_addr.s_addr << ":" << remote_addr.sin_port << "\n";
+            if (DEBUG_LOG) std::cout << "[I] TCP:: Listening on " << remote_addr.sin_addr.s_addr << ":" << remote_addr.sin_port << "\n";
             return 0;
         }
 
@@ -85,13 +81,13 @@ class TCPConnector {
         int sendData(int sockfd, void *ptr, unsigned long long data_size) {
             int bytes_sent = 0;
             void* data_ptr = ptr;
-            std::cout << "TCP: sendData() @" << sockfd << " " << ptr << " " << data_ptr << " " << data_size << "\n";
+            // std::cout << "TCP: sendData() @" << sockfd << " " << ptr << " " << data_ptr << " " << data_size << "\n";
             int error_code;
             unsigned int error_code_size = sizeof(error_code);
             int sockopt = getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &error_code, &error_code_size);
-            std::cout << error_code << " " << error_code_size << " " << sockopt << "\n";
-            std::cout << strerror(error_code) << "\n";
-            try {
+            // std::cout << error_code << " " << error_code_size << " " << sockopt << "\n";
+            // std::cout << strerror(error_code) << "\n";
+
             while( (bytes_sent = send(sockfd, data_ptr, data_size, 0) ) > 0) {
 
                 std::cout << "[I] Sent " << bytes_sent << " bytes\n";
@@ -111,10 +107,6 @@ class TCPConnector {
             } else {
                 return 0;
             }
-            } catch (const std::exception &e) {
-                std::cout << strerror(errno) << " " << e.what() << "\n";
-                return -1;
-            }
         }
 
 
@@ -127,7 +119,7 @@ class TCPConnector {
             else
                 recv_fd = this->socket;
 
-            std::cout << "TCP: receiveData() @" << recv_fd << " " << ptr << " " << data_ptr << " " << data_size << "\n";
+            // std::cout << "TCP: receiveData() @" << recv_fd << " " << ptr << " " << data_ptr << " " << data_size << "\n";
             // std::cout << ptr << " " << data_ptr << "\n";
             while( (bytes_received = recv(recv_fd, data_ptr, data_size, 0)) > 0) {
 

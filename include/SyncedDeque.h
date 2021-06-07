@@ -6,6 +6,8 @@
 #include <condition_variable>
 #include <type_traits>
 #include <atomic>
+
+#include "Constants.h"
 // dla TCP zalozenie ze ProtoPacket moze miec puste pole data czy jakoś tak ;-;
 // dla TCP w górę T : std::pair<int, ProtoPacket >
 // dla TCP w dół T: std::pair< int, ProtoPacket >
@@ -29,11 +31,11 @@ public:
         std::unique_lock<std::mutex> lock(q_lock);
         q.push_back(message);
 
-        std::cout << "pushing message: " << typeid(message).name() << "\n";
+        if (DEBUG_LOG) std::cout << "[DEBUG] Q:: pushing message: " << typeid(message).name() << "\n";
         
         if constexpr (std::is_same_v<T, std::pair<struct in_addr, ProtoPacket> >)
         {
-            std::cout << "SyncedDeque udp que push: " << q.front().second.command << std::endl;
+            if (DEBUG_LOG) std::cout << "[DEBUG] Q:: udp que push: " << q.front().second.command << std::endl;
         }
         lock.unlock();
         cv.notify_one();
@@ -54,9 +56,9 @@ public:
             //jesli jest to sprawdzic czy komunikat jest dla naszego scoketu
             if (q.front().first == message.first || message.first == -1)
             {
-                std::cout << "POP ZGODNY SOCKET: " << message.first << "\n";
+                if (DEBUG_LOG) std::cout << "[DEBUG] Q:: Pop with message for socket " << message.first << "\n";
                 if (q.size() > 0)
-                    std::cout << "Q: " << q.front().first << "\n";
+                    if (DEBUG_LOG) std::cout << "[DEBUG] Q:: Pop with q front message for socket " << q.front().first << "\n";
 
                 //jesli tak to kopiujemy i wychodzimy
                 message = q.front();
@@ -65,8 +67,8 @@ public:
             }
             else
             {
-                std::cout << "POP ELSE ;_;\n";
-                std::cout << "POP: " << message.first << "\n";
+                // std::cout << "POP ELSE ;_;\n";
+                if (DEBUG_LOG) std::cout << "[DEBUG] Q:: Pop: " << message.first << "\n";
                 if (q.size() > 0)
                     std::cout << "Q: " << q.front().first << "\n";
                 //pozwalamy innemu wątkowi zgarnąć swoją wiadomość
