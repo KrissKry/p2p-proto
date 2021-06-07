@@ -176,10 +176,10 @@ public:
 	{
 		for (auto &it : NetFileList)
 		{
-			std::cout << "fileHander newfileinfo\n";
+			if (HELP_LOG) std::cout << "FH:: __NAME__ || ___OWNER_IP___ || ___COPY_IP___\n";
 			if (strcmp(it.second.name, header.name) == 0 && (it.first.s_addr == ip.s_addr))
 			{
-				std::cout << "fileHander newfileinfo IF " << inet_ntoa(it.first) << " " << inet_ntoa(ip) << " " << std::endl;
+				if (HELP_LOG) std::cout << "FH:: "<< header.name<< " || " << inet_ntoa(it.first) << " || " << inet_ntoa(ip) << "\n";
 				return -1;
 			}
 		}

@@ -155,40 +155,44 @@ public:
         int client_index = spawnClient(header, client_socket);
 
         //send header
-        // std::cout << "Socket:" << client_socket << " index" << client_index << "\n";
-        // std::cout << header.name << " " << header.size << " " << header.uuid << "\n";
-        // std::cout << "packet " << &packet <<  " packet header: " << &packet.header << " rozmiar:" << sizeof(packet.header) << std::endl;
         packet.data.resize(packet.header.size);
-        // std::cout << "dane rozmiar: " << packet.data.size() << " @" << &packet.data << " " << &packet.data[0] << "\n";
-        int resp{};
-        if (tcp_connections.at(client_index).first->setupClient() < 0)
-        {
+
+        if ( tcp_connections.at(client_index).first->setupClient() < 0) {
             strerror(errno);
             return -1;
         }
-        // std::cout << "post setup client\n";
-        // std::cout << "got header with " << header.name << " @" <<header.uuid << "\n";
-        // std::cout << "sending request for " << packet.header.name << " @" << packet.header.uuid << "\n";
-        if (INFO_LOG)
-            std::cout << "[I] NH:: Sending request for " << packet.header.name << " on socket " << client_socket << "\n";
 
-        if ((resp = tcp_connections.at(client_index).first->sendData(client_socket, static_cast<void *>(&packet.header), sizeof(packet.header))) < 0)
+        if (INFO_LOG) std::cout << "[I] NH:: Sending request for " << packet.header.name << " on socket " << client_socket << "\n";
+
+        int resp {};
+        if ( (resp = tcp_connections.at(client_index).first->sendData(client_socket, static_cast<void *>(&packet.header), sizeof(packet.header))) < 0)
             return -1;
-        // std::cout << "resp: " << resp << "\n";
+
 
         //receive header
-        if (tcp_connections.at(client_index).first->receiveData(0, static_cast<void *>(&packet.header), sizeof(packet.header)) < 0)
+        if (tcp_connections.at(client_index).first->receiveData(0, static_cast<void *>(&packet.header), sizeof(packet.header)) < 0) {
+            std::cout << "[ERR] Confirming header for " << packet.header.name << " failed.\n";
+            packet.data.clear();
+            packet.data.resize(0);
             return -1;
+        }
+
 
         if (INFO_LOG)
             std::cout << "[I] NH:: Received confirmation for " << packet.header.name << " on socket " << socket << "\n";
 
-        //resize data accordingly
+
+        //resize data accordingly once again
         packet.data.resize(packet.header.size);
 
         //receive data
-        if (tcp_connections.at(client_index).first->receiveData(0, static_cast<void *>(&packet.data[0]), packet.data.size()) < 0)
+        if (tcp_connections.at(client_index).first->receiveData(0, static_cast<void *>(&packet.data[0]), packet.data.size()) < 0) {
+
+            std::cout << "[ERR] Receiving complete data for " << packet.header.name << " failed. Erasing memory and aborting.\n";
+            packet.data.clear();
+            packet.data.resize(0);
             return -1;
+        }
 
         if (INFO_LOG)
             std::cout << "[I] NH:: Received " << packet.data.size() << " bytes of " << packet.header.name << " on socket " << socket << "\n";

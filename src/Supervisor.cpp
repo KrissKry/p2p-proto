@@ -29,23 +29,23 @@ void Supervisor::run()
     // start network connector
     std::thread tcpQueueListener(&Supervisor::tcpQueueListener, this);
     std::thread udpQueueListener(&Supervisor::udpQueueListener, this);
-    std::cout << "          tcpQueueListener " << tcpQueueListener.get_id() << "\n";
-    std::cout << "          udpQueueListener " << udpQueueListener.get_id() << "\n";
+    // std::cout << "          tcpQueueListener " << tcpQueueListener.get_id() << "\n";
+    // std::cout << "          udpQueueListener " << udpQueueListener.get_id() << "\n";
     int res = networkHandler->createNewTCPServer();
     if (res == 0)
     {
         std::thread tcpServer(&NetworkHandler::handleTCPServer, networkHandler, 0);
-        std::cout << "          tcpServer " << tcpServer.get_id() << "\n";
+        // std::cout << "          tcpServer " << tcpServer.get_id() << "\n";
 
         tcpServer.detach();
     }
 
     std::thread udpServer(&NetworkHandler::udpServerRun, networkHandler, std::ref(this->stop));
-    std::cout << "          udpServer " << udpServer.get_id() << "\n";
+    // std::cout << "          udpServer " << udpServer.get_id() << "\n";
 
     udpServer.detach();
     std::thread udpDownflowQueListener(&NetworkHandler::udpDownflowQueueListener, networkHandler, std::ref(this->stop));
-    std::cout << "          udpDownflowQueListener " << udpDownflowQueListener.get_id() << "\n";
+    // std::cout << "          udpDownflowQueListener " << udpDownflowQueListener.get_id() << "\n";
 
     udpDownflowQueListener.detach();
     if (DEBUG_LOG)
@@ -135,8 +135,8 @@ void Supervisor::broadcastDelete(ResourceHeader resourceHeader)
     memset(&protoPacket, 0, sizeof(ProtoPacket));
     protoPacket.command = Commands::DELETE;
     protoPacket.header = resourceHeader;
-    // std::vector<unsigned char> data;
-    // protoPacket.data = data;
+    protoPacket.data.resize(0);
+
     udp_downflow.push(protoPacket);
 }
 
@@ -146,8 +146,7 @@ void Supervisor::broadcastGetInfo(ResourceHeader resourceHeader)
     memset(&protoPacket, 0, sizeof(ProtoPacket));
     protoPacket.command = Commands::GET_INFO;
     protoPacket.header = resourceHeader;
-    // std::vector<unsigned char> data;
-    // protoPacket.data = data;
+    protoPacket.data.resize(0);
     udp_downflow.push(protoPacket);
 }
 
@@ -156,6 +155,8 @@ void Supervisor::sendDownload(ResourceHeader resourceHeader)
     ProtoPacket protoPacket;
     protoPacket.command = Commands::DOWNLOAD;
     protoPacket.header = resourceHeader;
+    protoPacket.data.resize(0);
+
     const std::pair message(1, protoPacket);
     tcp_downflow.push(message);
 }
@@ -163,6 +164,7 @@ void Supervisor::sendDownload(ResourceHeader resourceHeader)
 void Supervisor::sendUpload(int fd, const Resource &res)
 {
     ProtoPacket protoPacket;
+    
     protoPacket.command = Commands::UPLOAD;
     protoPacket.header = res.header;
     protoPacket.data = res.data;
