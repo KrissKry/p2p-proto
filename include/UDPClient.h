@@ -15,18 +15,18 @@
 
 class UDPClient
 {
+private:
+    const int UDP_PORT = 10000;
+
 public:
     void broadcast(ProtoPacket protoPacket)
     {
-        // const char *message = data;
-
         //create udp socket
         int socketDesc = socket(AF_INET, SOCK_DGRAM, 0);
         std::cout << "socketDesc " << socketDesc << std::endl;
-        //TODO: catch exceptions :)
+
         if (socketDesc < 0)
         {
-            std::cout << "socketDesc" << std::endl;
             perror("sock error");
         }
 
@@ -36,26 +36,24 @@ public:
 
         if (options == -1)
         {
-            perror("setsockopt error");
+            perror("UDP broadcast:setsockopt error");
         }
 
         //set address structure
         struct sockaddr_in addr;
         memset(&addr, 0, sizeof(struct sockaddr_in));
         addr.sin_family = AF_INET;
-        // addr.sin_addr.s_addr = inet_addr("192.168.0.255");
         addr.sin_addr.s_addr = htonl(INADDR_BROADCAST);
-        addr.sin_port = htons(10000);
+        addr.sin_port = htons(UDP_PORT);
 
-        //sending data
+        //send data
         int feed = sendto(socketDesc, &protoPacket, sizeof(protoPacket), 0, (struct sockaddr *)&addr, sizeof(addr));
 
         if (feed < 0)
         {
             std::cout << feed << std::endl;
-            perror("sendto");
+            perror("UDP broadcast:sendto");
         }
-        std::cout<< "UDPClient: broadcast" <<std::endl;
     }
     void server(SyncedDeque<std::pair<struct in_addr, ProtoPacket>> &udp_upflow)
     {
@@ -67,12 +65,12 @@ public:
             std::cout << "socketDesc" << std::endl;
             perror("sock error");
         }
+        //set address struct
         struct sockaddr_in addr;
         memset(&addr, 0, sizeof(struct sockaddr_in));
         addr.sin_family = AF_INET;
-        // addr.sin_addr.s_addr = inet_addr("192.168.0.255");
         addr.sin_addr.s_addr = htonl(INADDR_ANY);
-        addr.sin_port = htons(10000);
+        addr.sin_port = htons(UDP_PORT);
 
         //bind socket to address
         int bindFeed = bind(socketDesc, (struct sockaddr *)&addr, sizeof(addr));
@@ -100,12 +98,6 @@ public:
 
                     if (receivedBytes > 0)
                     {
-
-                        std::cout << "UDP server: " << protoPacket.command << std::endl;
-                        std::cout << "UDP server: " << protoPacket.header.name << std::endl;
-                        std::cout << "UDP server: " << protoPacket.header.size << std::endl;
-                        std::cout << "UDP server: ip:"
-                                  << inet_ntoa(clientAddr.sin_addr) << " " << typeid(clientAddr.sin_addr).name() << std::endl;
                         udp_upflow.push(std::pair<struct in_addr, ProtoPacket>(clientAddr.sin_addr, protoPacket));
                     }
                 }
