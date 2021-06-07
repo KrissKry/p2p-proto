@@ -12,7 +12,9 @@ struct in_addr getMyIp()
     struct ifaddrs *ifap, *ifa;
     struct sockaddr_in *sa;
     char *addr;
-    struct in_addr chosenIp{};
+    struct in_addr chosenIp
+    {
+    };
 
     getifaddrs(&ifap);
     int i = -1;
@@ -26,19 +28,12 @@ struct in_addr getMyIp()
             printf("%d Interface: %s\tAddress: %s\n", i, ifa->ifa_name, addr);
         }
     }
-
-    int choise;
-    std::cout << "Choose your interface" << std::endl;
-    std::cin >> choise;
-    while (std::cin.fail() || choise > i || choise < 0)
+    if (i < 1)
     {
-
-        std::cout << "Error wrong input " << choise << std::endl;
-        std::cout << "Choose your interface" << std::endl;
-        std::cin.clear();
-        std::cin.ignore();
-        std::cin >> choise;
+        perror("[ERR]: inteface not found");
+        exit(-1);
     }
+    int choise = 1;
     int j = 0;
     for (ifa = ifap; ifa; ifa = ifa->ifa_next)
     {
@@ -54,7 +49,7 @@ struct in_addr getMyIp()
             j++;
         }
     }
-    std::cout << "Chosen ip: " << inet_ntoa(chosenIp) << std::endl;
+    std::cout << "[INFO] client IP: " << inet_ntoa(chosenIp) << std::endl;
 
     freeifaddrs(ifap);
 
