@@ -160,6 +160,7 @@ void Supervisor::handleDelete(ResourceHeader resourceHeader, struct in_addr send
     int result = fileHandler->deleteNotOwnFile(resourceHeader);
     if(result == 0)
     {
+        fileHandler->deleteFromNetList(resourceHeader, ip);
         broadcastDelete(resourceHeader);
     }
 }
