@@ -146,8 +146,10 @@ void Supervisor::sendUpload(int fd, const Resource &res)
 
 void Supervisor::handleGetInfo()
 {
-    std::vector<std::pair<struct in_addr, ResourceHeader>> files = fileHandler->getNetFileList();
-    // tcp send
+    std::vector<Resource> files = fileHandler->getOwnFileList();
+    for (const Resource& res: files) {
+        broadcastCreate(res.header);
+    }
 }
 
 void Supervisor::handleCreate(ResourceHeader resourceHeader, struct in_addr senderIp)
@@ -163,7 +165,10 @@ void Supervisor::handleDelete(ResourceHeader resourceHeader)
 
 void Supervisor::handleUpload(const Resource &res)
 {
-    fileHandler->createFile(res);
+    int result = fileHandler->createFile(res);
+    if (result == 0) {
+        broadcastCreate(res.header);
+    }
 }
 
 void Supervisor::handleDownload(int fd, ResourceHeader resHeader)
@@ -204,12 +209,16 @@ int Supervisor::downloadFile(const std::string &name)
 
 int Supervisor::deleteFile(const std::string &name)
 {
-    ResourceHeader header{};
-    strcpy(header.name, name.c_str());
-    int res = fileHandler->deleteOwnFile(header);
-    if (res == 0)
+    Resource res = fileHandler->getFile(name.c_str());
+    ResourceHeader header = res.header;
+    if (strcmp(header.name, "") != 0)
     {
-        broadcastDelete(header);
+        if(strcmp(header.uuid, inet_ntoa(ip)) == 0) {
+            fileHandler->deleteOwnFile(header);
+            broadcastDelete(header);
+        } else {
+            fileHandler->deleteNotOwnFile(header);
+        }
         return 0;
     }
     return -1;

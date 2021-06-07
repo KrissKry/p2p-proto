@@ -82,7 +82,7 @@ public:
 		file.close();
 
 		OwnFileList.push_back(resource);
-		return 1;
+		return 0;
 	}
 
 	// metoda nie jest bezpieczna ale je�li wybieramy z listy to whatever
@@ -104,13 +104,14 @@ public:
 		std::vector<Resource>::iterator it;
 		for (it = OwnFileList.begin(); it != OwnFileList.end(); it++)
 		{
-			if (strcmp(it->header.name, rh.name) == 0 && rh.uuid == it->header.uuid)
+			if (strcmp(it->header.name, rh.name) == 0)
 			{
-				if (remove(rh.name) != 0)
-					return 1;
+				if (remove(rh.name) != 0) {
+                    return 1;
+				}
 				OwnFileList.erase(it);
 				deleteFromNetList(rh);
-				return 0;
+                return 0;
 			}
 		}
 		return 1;
@@ -122,7 +123,7 @@ public:
 		std::vector<Resource>::iterator it;
 		for (it = OwnFileList.begin(); it != OwnFileList.end(); it++)
 		{
-			if (strcmp(it->header.name, rh.name) == 0 && rh.uuid == it->header.uuid)
+			if (strcmp(it->header.name, rh.name) == 0)
 			{
 				if (remove(rh.name) != 0)
 					return 1;
@@ -141,10 +142,9 @@ public:
 			if (strcmp(it->second.name, rh.name) == 0 && rh.uuid == it->second.uuid)
 			{
 				NetFileList.erase(it);
-				return 0;
 			}
 		}
-		return 1;
+		return 0;
 	}
 
 	bool isOwner(ResourceHeader rh, const char *ip)
