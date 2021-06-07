@@ -113,3 +113,7 @@ cmake_install.cmake
 protocole
 Makefile
 .vscode/
+*.txt
+*.jpg
+*.mkv
+*.deb

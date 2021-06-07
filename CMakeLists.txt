@@ -16,4 +16,5 @@ set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
 add_executable(protocole 
     main.cpp
     src/Supervisor.cpp
-    src/UI.cpp)
+    src/UI.cpp
+    src/TCPConnector.cpp)
