@@ -87,14 +87,14 @@ class TCPConnector {
             int sockopt = getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &error_code, &error_code_size);
             // std::cout << error_code << " " << error_code_size << " " << sockopt << "\n";
             // std::cout << strerror(error_code) << "\n";
-
+            if (INFO_LOG) std::cout << "[I] TCP:: Beginning upload of " << data_size << " bytes.\n"; 
             while( (bytes_sent = send(sockfd, data_ptr, data_size, 0) ) > 0) {
 
-                std::cout << "[I] Sent " << bytes_sent << " bytes\n";
+                // std::cout << "[I] TCP:: Sent " << bytes_sent << " bytes\n";
                 data_size -= bytes_sent;
 
                 if (data_size < 1) {
-                    std::cout << "[I] Exiting sendData()\n";
+                    if (INFO_LOG) std::cout << "[I] TCP:: Sent all bytes. Exiting sendData()\n";
                     return 0;
                 }
                 data_ptr = static_cast<char*>(data_ptr) + bytes_sent;
@@ -121,9 +121,11 @@ class TCPConnector {
 
             // std::cout << "TCP: receiveData() @" << recv_fd << " " << ptr << " " << data_ptr << " " << data_size << "\n";
             // std::cout << ptr << " " << data_ptr << "\n";
+            if (INFO_LOG) std::cout << "[I] TCP:: Beginning download of " << data_size << " bytes.\n"; 
+
             while( (bytes_received = recv(recv_fd, data_ptr, data_size, 0)) > 0) {
 
-                std::cout << "[I] Received " << bytes_received << " bytes\n";
+                // std::cout << "[I] TCP:: Received " << bytes_received << " bytes\n";
                 data_size -= bytes_received;
 
                 if (data_size < 1) {

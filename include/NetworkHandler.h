@@ -110,6 +110,7 @@ public:
         if (tcp_connections.at(0).first->sendData(socket, static_cast<void *>(&pair.second.header), sizeof(pair.second.header)) < 0)
             return -1;
 
+        if (INFO_LOG) std::cout << "[I] NH:: Beginning transmission of data from " << pair.second.header.name << "\n";
         //send packet data
         if (tcp_connections.at(0).first->sendData(socket, static_cast<void *>(&pair.second.data[0]), pair.second.data.size()) < 0)
             return -1;

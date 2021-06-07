@@ -173,7 +173,7 @@ void Supervisor::handleUpload(const Resource &res)
 
 void Supervisor::handleDownload(int fd, ResourceHeader resHeader)
 {
-    if (DEBUG_LOG) std::cout << "[DEBUG] SV:: Handling download for " << resHeader.name << " @" << resHeader.uuid << "\n";
+    if (DEBUG_LOG) std::cout << "[DEBUG] SV:: Handling download request for " << resHeader.name << "\n";// << resHeader.uuid << "\n";
     Resource res = fileHandler->getFile(resHeader.name);
     // std::cout << res.header.name << " " << res.header.size << " " << res.header.uuid << "\n";
     if (strcmp(res.header.name, "") != 0)

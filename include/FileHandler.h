@@ -106,9 +106,8 @@ public:
 		{
 			if (strcmp(it->header.name, rh.name) == 0)
 			{
-				if (remove(rh.name) != 0) {
-                    return 1;
-				}
+				// if (remove(rh.name) != 0)
+				// 	return 1;
 				OwnFileList.erase(it);
 				deleteFromNetList(rh);
                 return 0;
@@ -125,8 +124,8 @@ public:
 		{
 			if (strcmp(it->header.name, rh.name) == 0)
 			{
-				if (remove(rh.name) != 0)
-					return 1;
+				// if (remove(rh.name) != 0)
+				// 	return 1;
 				OwnFileList.erase(it);
 				return 0;
 			}
