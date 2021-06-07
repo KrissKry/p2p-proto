@@ -119,7 +119,7 @@ public:
 	// metoda do usuwania pliku je�li nie jeste�my tw�rc� a mamy go na swoim dysku
 	int deleteNotOwnFile(ResourceHeader rh)
 	{
-		std::vector<Resource>::iterator it;
+        std::vector<Resource>::iterator it;
 		for (it = OwnFileList.begin(); it != OwnFileList.end(); it++)
 		{
 			if (strcmp(it->header.name, rh.name) == 0)
@@ -135,14 +135,16 @@ public:
 
 	int deleteFromNetList(ResourceHeader rh, struct in_addr ip)
 	{
-		std::vector<std::pair<struct in_addr, ResourceHeader>>::iterator it;
-		for (it = NetFileList.begin(); it != NetFileList.end(); it++)
-		{	
-			std::cout << it->second.name << " " << rh.name << "\n";
+        auto it = NetFileList.begin();
+        while (it != NetFileList.end())
+		{
             if (strcmp(it->second.name, rh.name) == 0 && strcmp(inet_ntoa(it->first), inet_ntoa(ip)) == 0)
 			{
-				NetFileList.erase(it);
-			}
+				it = NetFileList.erase(it);
+			} else
+			{
+                ++it;
+            }
 		}
 		return 0;
 	}

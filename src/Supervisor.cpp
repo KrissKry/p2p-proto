@@ -111,7 +111,7 @@ void Supervisor::broadcastDelete(ResourceHeader resourceHeader)
     ProtoPacket protoPacket;
     protoPacket.command = Commands::DELETE;
     protoPacket.header = resourceHeader;
-//    udp_downflow.push(protoPacket);
+    udp_downflow.push(protoPacket);
 }
 
 void Supervisor::broadcastGetInfo(ResourceHeader resourceHeader)
