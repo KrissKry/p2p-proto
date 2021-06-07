@@ -39,7 +39,8 @@ void Supervisor::run()
     udpServer.detach();
     std::thread udpDownflowQueListener(&NetworkHandler::udpDownflowQueueListener, networkHandler);
     udpDownflowQueListener.detach();
-    if (DEBUG_LOG) std::cout << "[DEBUG] SV:: udpDownlow detach\n";
+    if (DEBUG_LOG)
+        std::cout << "[DEBUG] SV:: udpDownlow detach\n";
     tcpQueueListener.join();
     udpQueueListener.join();
 }
@@ -47,12 +48,13 @@ void Supervisor::run()
 void Supervisor::tcpQueueListener()
 {
     std::pair<int, ProtoPacket> message;
-    
+
     while (shouldRun)
-    {   
+    {
         message.first = -1;
         tcp_upflow.pop(message);
-        if (DEBUG_LOG) std::cout << "[DEBUG] SV:: got command " << message.second.command << " on socket " << socket << "\n";
+        if (DEBUG_LOG)
+            std::cout << "[DEBUG] SV:: got command " << message.second.command << " on socket " << socket << "\n";
 
         Resource res = {};
         res.header = message.second.header;
@@ -76,13 +78,17 @@ void Supervisor::udpQueueListener()
     std::pair<struct in_addr, ProtoPacket> message;
     while (shouldRun)
     {
-        if (DEBUG_LOG) std::cout << "[DEBUG] SV:: udpQueueListener: waiting for message" << "\n";
+        if (DEBUG_LOG)
+            std::cout << "[DEBUG] SV:: udpQueueListener: waiting for message"
+                      << "\n";
         udp_upflow.pop(message);
 
         switch (message.second.command)
         {
         case Commands::CREATE:
-            if (DEBUG_LOG) std::cout << "[DEBUG] SV:: udpQueueListener:switch create" << "\n";
+            if (DEBUG_LOG)
+                std::cout << "[DEBUG] SV:: udpQueueListener:switch create"
+                          << "\n";
             handleCreate(message.second.header, message.first);
             break;
         case Commands::DELETE:
@@ -102,7 +108,8 @@ void Supervisor::broadcastCreate(ResourceHeader resourceHeader)
     ProtoPacket protoPacket;
     protoPacket.command = Commands::CREATE;
     protoPacket.header = resourceHeader;
-    if (INFO_LOG) std::cout << "[I] SV:: broadcastCreate for " << resourceHeader.name << "\n";
+    if (INFO_LOG)
+        std::cout << "[I] SV:: broadcastCreate for " << resourceHeader.name << "\n";
     udp_downflow.push(protoPacket);
 }
 
@@ -144,7 +151,8 @@ void Supervisor::sendUpload(int fd, const Resource &res)
 void Supervisor::handleGetInfo()
 {
     std::vector<Resource> files = fileHandler->getOwnFileList();
-    for (const Resource& res: files) {
+    for (const Resource &res : files)
+    {
         broadcastCreate(res.header);
     }
 }
@@ -157,9 +165,12 @@ void Supervisor::handleCreate(ResourceHeader resourceHeader, struct in_addr send
 void Supervisor::handleDelete(ResourceHeader resourceHeader, struct in_addr senderIp)
 {
     fileHandler->deleteFromNetList(resourceHeader, senderIp);
-    if(strcmp(resourceHeader.uuid, inet_ntoa(ip)) == 0) {
+
+    if (resourceHeader.uuid == inet_ntoa(ip))
+    {
         int result = fileHandler->deleteOwnFile(resourceHeader);
-        if (result == 0) {
+        if (result == 0)
+        {
             fileHandler->deleteFromNetList(resourceHeader, ip);
             broadcastDelete(resourceHeader);
         }
@@ -169,18 +180,21 @@ void Supervisor::handleDelete(ResourceHeader resourceHeader, struct in_addr send
 void Supervisor::handleUpload(const Resource &res)
 {
     int result = fileHandler->createFile(res, ip);
-    if (result == 0) {
+    if (result == 0)
+    {
         broadcastCreate(res.header);
     }
 }
 
 void Supervisor::handleDownload(int fd, ResourceHeader resHeader)
 {
-    if (DEBUG_LOG) std::cout << "[DEBUG] SV:: Handling download request for " << resHeader.name << "\n";// << resHeader.uuid << "\n";
+    if (DEBUG_LOG)
+        std::cout << "[DEBUG] SV:: Handling download request for " << resHeader.name << "\n"; // << resHeader.uuid << "\n";
     Resource res = fileHandler->getFile(resHeader.name);
     if (strcmp(res.header.name, "") != 0)
     {
-        if (DEBUG_LOG) std::cout << "[DEBUG] SV:: Res.header not empty\n";
+        if (DEBUG_LOG)
+            std::cout << "[DEBUG] SV:: Res.header not empty\n";
         sendUpload(fd, res);
     }
 }
@@ -190,7 +204,8 @@ int Supervisor::createFile(const std::string &path, const std::string &name)
     ResourceHeader header = fileHandler->AddFile(path.c_str(), name.c_str(), ip);
     if (strcmp(header.name, "") != 0)
     {
-        if (DEBUG_LOG) std::cout << "[DEBUG] SV:: createFile\n";
+        if (DEBUG_LOG)
+            std::cout << "[DEBUG] SV:: createFile\n";
         broadcastCreate(header);
         return 0;
     }
