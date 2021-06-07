@@ -14,6 +14,7 @@ Supervisor::Supervisor(struct in_addr ip) : ip(ip)
     udp_downflow.setStopper(this->stop);
     udp_upflow.setStopper(this->stop);
     networkHandler = new NetworkHandler(tcp_upflow, tcp_downflow, udp_upflow, udp_downflow);
+    broadcastGetInfo();
 }
 
 Supervisor::~Supervisor()
@@ -121,11 +122,11 @@ void Supervisor::broadcastDelete(ResourceHeader resourceHeader)
     udp_downflow.push(protoPacket);
 }
 
-void Supervisor::broadcastGetInfo(ResourceHeader resourceHeader)
+void Supervisor::broadcastGetInfo()
 {
     ProtoPacket protoPacket;
     protoPacket.command = Commands::GET_INFO;
-    protoPacket.header = resourceHeader;
+    //protoPacket.header = resourceHeader;
     udp_downflow.push(protoPacket);
 }
 
