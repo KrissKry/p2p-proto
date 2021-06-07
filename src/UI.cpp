@@ -28,51 +28,63 @@ bool UI::parseCommand() {
 
     if (tokenList.size() == 1 && tokenList[0] == "quit") {
         return false;
+
     } else if (tokenList.size() == 4 && tokenList[0] == "upload" && tokenList[2] == "as") {
         result = supervisor->createFile(tokenList[1], tokenList[3]);
         if(result == 0) {
-            safeOutput("OK");
+            std::string output = "\n>>> Uploaded " + tokenList[3] + "\n";
+            safeOutput(output);
         } else {
-            safeOutput("Error");
+            safeOutput("\n>>>ERROR\n");
         }
+
     } else if (tokenList.size() == 2 && tokenList[0] == "download") {
         result = supervisor->downloadFile(tokenList[1]);
         if(result == 0) {
-            safeOutput("OK");
+            std::string output = "\n>>> Finished downloading " + tokenList[1] + "\n"; 
+            safeOutput(output);
         } else {
-            safeOutput("Error");
+            safeOutput("\n>>>ERROR\n");
         }
+
     } else if (tokenList.size() == 2 && tokenList[0] == "delete") {
         result = supervisor->deleteFile(tokenList[1]);
         if(result == 0) {
-            safeOutput("OK");
+            std::string output = "\n>>> Deleted " + tokenList[1] + "\n";
+            safeOutput(output);
         } else {
-            safeOutput("Error");
+            safeOutput("\n>>>ERROR\n");
         }
+
     } else if (tokenList.size() == 2 && tokenList[0] == "list" && tokenList[1] == "disk") {
         std::vector<Resource> resourceList = supervisor->listDisk();
 
         if(resourceList.empty()) {
-            safeOutput("No resources");
+            safeOutput("\n>>>No resources locally\n");
         } else {
             for (const Resource& res: resourceList) {
                 std::cout<<res.header.name<<" "<<res.header.uuid<<std::endl;
             }
         }
+
     } else if (tokenList.size() == 2 && tokenList[0] == "list" && tokenList[1] == "net") {
         std::vector<std::pair<struct in_addr, ResourceHeader>> resourceList = supervisor->listNetwork();
 
         if(resourceList.empty()) {
-            safeOutput("No resources");
+            safeOutput("\n>>> No resources in the network\n");
         } else {
+            safeOutput("\n_________FILES_________\n");
             for (std::pair<struct in_addr, ResourceHeader> res: resourceList) {
                 std::cout << res.second.name << " " << res.second.uuid << " " << inet_ntoa(res.first) << std::endl;
             }
+
         }
+
     } else if (tokenList[0].empty()) {
         return true;
+
     } else {
-        safeOutput("Invalid command");
+        safeOutput("\n>>>Invalid command\n");
     }
     return true;
 }
@@ -90,12 +102,12 @@ char * UI::safeInput(char *command) {
 
 
 void UI::printOptions() {
-    std::cout << "~~~~~~~~~~~~~~~~~\n";
-    std::cout << "[I] ULICA WYSYŁA ZIOMECZKOM WIELKIE ELO\n";
-    std::cout << "> upload <path> as <name>\n";
-    std::cout << "> download <name>\n";
-    std::cout << "> list disk\n";
-    std::cout << "> list net\n";
-    std::cout << "> quit\n";
-    std::cout << "~~~~~~~~~~~~~~~~~\n";
+    std::cout << "________________KOMENDY________________\n";
+    std::cout << "upload <path> as <name>\n";
+    std::cout << "download <name>\n";
+    std::cout << "delete <name>\n";
+    std::cout << "list disk\n";
+    std::cout << "list net\n";
+    std::cout << "quit\n";
+    std::cout << "_______________________________________\n";
 }

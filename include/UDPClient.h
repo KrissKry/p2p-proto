@@ -23,7 +23,7 @@ public:
     {
         //create udp socket
         int socketDesc = socket(AF_INET, SOCK_DGRAM, 0);
-        std::cout << "socketDesc " << socketDesc << std::endl;
+        if (DEBUG_LOG) std::cout << "socketDesc " << socketDesc << std::endl;
 
         if (socketDesc < 0)
         {
@@ -63,7 +63,7 @@ public:
         int socketDesc = socket(AF_INET, SOCK_DGRAM, 0);
         if (socketDesc < 0)
         {
-            std::cout << "socketDesc" << std::endl;
+            if (DEBUG_LOG) std::cout << "socketDesc" << std::endl;
             perror("sock error");
         }
         //set address struct

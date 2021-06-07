@@ -132,7 +132,7 @@ int TCPConnector::receiveData(int fd, void *ptr, unsigned long long data_size) {
     }
 
 
-    if (bytes_received < 0) {
+    if (bytes_received < 0 || data_size > 0) {
         printError();
         return -1;
     } else {
