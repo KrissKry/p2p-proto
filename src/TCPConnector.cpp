@@ -81,8 +81,7 @@ int TCPConnector::sendData(int sockfd, void *ptr, unsigned long long data_size) 
     while( (bytes_sent = send(sockfd, data_ptr, data_size, 0) ) > 0) {
 
         resp = rg.transmissionFailure();
-        std::cout << "[TCP]:: " << resp << "\n";
-        if ( resp ) {
+        if ( resp || bytes_sent < 0 ) {
             std::cout << "[ERR] Simulated transmission error\n";
             return -1;
         }
@@ -100,7 +99,6 @@ int TCPConnector::sendData(int sockfd, void *ptr, unsigned long long data_size) 
 
 
     if (bytes_sent < 0) {
-        printError();
         return -1;
     } else {
         return 0;
@@ -126,7 +124,6 @@ int TCPConnector::receiveData(int fd, void *ptr, unsigned long long data_size) {
 
     while( (bytes_received = recv(recv_fd, data_ptr, data_size, 0)) > 0) {
 
-
         data_size -= bytes_received;
 
         if (data_size < 1) {
@@ -140,7 +137,6 @@ int TCPConnector::receiveData(int fd, void *ptr, unsigned long long data_size) {
 
 
     if (bytes_received < 0 || data_size > 0) {
-        printError();
         return -1;
     } else {
         return 0;

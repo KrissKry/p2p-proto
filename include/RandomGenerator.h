@@ -9,7 +9,7 @@ class RandomGenerator
 private:
     std::mt19937 m_mt;
 
-    double transmission_error_threshold = 0.5;
+    double transmission_error_threshold = 0.995;
     double udp_packet_loss_threshold = 0.995;
 
     bool error_enabled = true;
