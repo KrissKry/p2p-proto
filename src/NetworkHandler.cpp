@@ -94,11 +94,12 @@ int NetworkHandler::runTCPClientThread(const ResourceHeader &header)
         return -1;
     }
     int client_index = spawnClient(header, client_socket);
+    auto connection_ref = tcp_connections.at(client_index);
 
     //send header
     packet.data.resize(packet.header.size);
 
-    if ( tcp_connections.at(client_index).first->setupClient() < 0) {
+    if ( connection_ref.first->setupClient() < 0) {
         strerror(errno);
         return -1;
     }
@@ -106,13 +107,30 @@ int NetworkHandler::runTCPClientThread(const ResourceHeader &header)
     if (INFO_LOG) std::cout << "[I] NH:: Sending request for " << packet.header.name << " on socket " << client_socket << "\n";
 
     int resp {};
-    if ( (resp = tcp_connections.at(client_index).first->sendData(client_socket, static_cast<void *>(&packet.header), sizeof(packet.header))) < 0)
+    if ( (resp = connection_ref.first->sendData(client_socket, static_cast<void *>(&packet.header), sizeof(packet.header))) < 0)
         return -1;
 
-    //tutaj czytanie 1byte komendy zwrotnej jesli NOT FOUND to handling błędu i usunięcie tego zasobu i blokada jego dalszego pobierania
+
+    //read command respons from remote
+    if ( connection_ref.first->receiveData(client_socket, static_cast<void *>(&packet.command), sizeof(packet.command)) < 0) {
+        std::cout << "[ERR] Receiving command response for " << packet.header.name << " failed.\n";
+        packet.data.clear();
+        packet.data.resize(0);
+        return -1;
+    }
+
+    //if file not found on the remote, send that information to the supervisor
+    if ( packet.command == Commands::NOT_FOUND ) {
+        std::cout << "[ERR] File wasn't found on the remote! Perhaps it was already deleted?\n";
+        packet.data.clear();
+        packet.data.resize(0);
+        tcp_upflow.push(std::make_pair(client_socket, packet));
+        return -1;
+    }
+
 
     //receive header
-    if (tcp_connections.at(client_index).first->receiveData(0, static_cast<void *>(&packet.header), sizeof(packet.header)) < 0) {
+    if (connection_ref.first->receiveData(0, static_cast<void *>(&packet.header), sizeof(packet.header)) < 0) {
         std::cout << "[ERR] Confirming header for " << packet.header.name << " failed.\n";
         packet.data.clear();
         packet.data.resize(0);
@@ -128,7 +146,7 @@ int NetworkHandler::runTCPClientThread(const ResourceHeader &header)
     packet.data.resize(packet.header.size);
 
     //receive data
-    if (tcp_connections.at(client_index).first->receiveData(0, static_cast<void *>(&packet.data[0]), packet.data.size()) < 0) {
+    if (connection_ref.first->receiveData(0, static_cast<void *>(&packet.data[0]), packet.data.size()) < 0) {
 
         std::cout << "[ERR] Receiving complete data for " << packet.header.name << " failed. Erasing memory and aborting.\n";
         packet.data.clear();
