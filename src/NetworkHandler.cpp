@@ -31,7 +31,8 @@ int NetworkHandler::handleTCPServerThread(int socket)
     ProtoPacket packet;
     packet.command = Commands::DOWNLOAD; //SEND
 
-    if (tcp_connections.at(0).first->receiveData(socket, static_cast<void *>(&packet.header), sizeof(packet.header)) < 0)
+    auto server_ref = tcp_connections.at(0);
+    if (server_ref.first->receiveData(socket, static_cast<void *>(&packet.header), sizeof(packet.header)) < 0)
         return -1; //zwroc error jakis cos
 
 
@@ -51,14 +52,24 @@ int NetworkHandler::handleTCPServerThread(int socket)
 
     if (INFO_LOG) std::cout << "[I] NH:: Got response from SV " << pair.second.header.name << "\n";
 
+    //send command
+    if (server_ref.first->sendData(socket, static_cast<void *>(&pair.second.command), sizeof(pair.second.command)) < 0)
+        return -1;
+
+    //exit on NOT_FOUND
+    if (pair.second.command == Commands::NOT_FOUND) {
+        std::cout << "[IMPORTANT] NH:: Sent command NOT_FOUND to client. Ending thread.\n";
+        return -1;
+    }
+
     //send packet header
-    if (tcp_connections.at(0).first->sendData(socket, static_cast<void *>(&pair.second.header), sizeof(pair.second.header)) < 0)
+    if (server_ref.first->sendData(socket, static_cast<void *>(&pair.second.header), sizeof(pair.second.header)) < 0)
         return -1;
 
     if (INFO_LOG) std::cout << "[I] NH:: Beginning transmission of data from " << pair.second.header.name << "\n";
     
     //send packet data
-    if (tcp_connections.at(0).first->sendData(socket, static_cast<void *>(&pair.second.data[0]), pair.second.data.size()) < 0)
+    if (server_ref.first->sendData(socket, static_cast<void *>(&pair.second.data[0]), pair.second.data.size()) < 0)
         return -1;
 
     return 0;
