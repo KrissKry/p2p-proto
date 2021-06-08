@@ -41,7 +41,7 @@ private:
     void handleNotFound(int fd, ResourceHeader resHeader);
     void broadcastCreate(ResourceHeader resourceHeader);
     void broadcastDelete(ResourceHeader resourceHeader);
-    void broadcastGetInfo();
+
     void sendDownload(ResourceHeader resourceHeader);
     void sendUpload(int fd, const Resource &res);
     void sendNotFound(int fd, const Resource &res);
@@ -52,6 +52,7 @@ public:
     void run();
     void cleanUp();
 
+    void broadcastGetInfo();
     int createFile(const std::string &path, const std::string &name);
     int downloadFile(const std::string &name);
     int deleteFile(const std::string &name);
