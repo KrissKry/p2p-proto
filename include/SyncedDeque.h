@@ -47,7 +47,7 @@ public:
         cv.wait(lock, [this]()
                 { 
                     // std::cout << "[WEEoo] " << typeid(T).name() << " " << stopper<< " " << ( 0 == *stopper ? "true" : "false")  << "\n";
-                    return ( (!q.empty()) || (*stopper != false) ); });
+                    return ((!q.empty()) || *stopper); });
 
         if(*stopper ) {
             // std::cout << "[WEEEOOOWEOOO]" << *stopper << "\n";

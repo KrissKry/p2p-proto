@@ -12,7 +12,7 @@ int NetworkHandler::runTCPServer(int server_index)
         if ((fd_sock = server_ref.first->serverAccept()))
         {
             //new thread to handle incoming connection without blocking the rest of the program 
-            auto ptr = std::make_shared<std::thread>(std::bind(&NetworkHandler::handleTCPServerThread, this, fd_sock));
+            auto ptr = std::make_shared<std::thread>([this, fd_sock] { handleTCPServerThread(fd_sock); });
             network_threads.push_back(std::move(ptr));
         }
     }
@@ -159,7 +159,7 @@ int NetworkHandler::runTCPClientThread(const ResourceHeader &header)
     
 
     if (INFO_LOG)
-        std::cout << "[I] NH:: Received confirmation for " << packet.header.name << " on socket " << socket << "\n";
+        std::cout << "[I] NH:: Received confirmation for " << packet.header.name << " on socket " << client_socket << "\n";
 
 
     //resize data accordingly once again
@@ -175,7 +175,7 @@ int NetworkHandler::runTCPClientThread(const ResourceHeader &header)
     }
 
     if (INFO_LOG)
-        std::cout << "[I] NH:: Received " << packet.data.size() << " bytes of " << packet.header.name << " on socket " << socket << "\n";
+        std::cout << "[I] NH:: Received " << packet.data.size() << " bytes of " << packet.header.name << " on socket " << client_socket << "\n";
 
     tcp_upflow.push(std::make_pair(client_socket, packet));
 
@@ -262,7 +262,7 @@ int NetworkHandler::spawnClient(const ResourceHeader &header, int client_socket)
     if (DEBUG_LOG) std::cout << "[DEBUG] NH:: Spawned new TCP Client with socket " << client_socket << " and remote " << header.uuid << "\n";
 
 
-    tcp_connections.push_back(std::make_pair(std::move(client_ptr), client_socket));
+    tcp_connections.emplace_back(std::move(client_ptr), client_socket);
 
     return tcp_connections.size() - 1;
 }
