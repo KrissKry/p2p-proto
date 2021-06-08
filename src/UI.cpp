@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <vector>
+#include <iomanip>
 #include "../include/UI.h"
 #include "../include/utils.h"
 
@@ -79,12 +80,14 @@ bool UI::parseCommand()
         }
         else
         {
-            safeOutput("\n_________FILES_________\n");
+            safeOutput("\n___________________FILES___________________\n");
+            std::cout << std::left << std::setw(30) << "NAME" << std::setw(20) << "OWNER IP" << std::endl;
             for (const Resource &res : resourceList)
             {
-                std::cout << res.header.name << " " << res.header.uuid << std::endl;
+                std::cout << std::left << std::setw(30) << res.header.name<< std::setw(20) << res.header.uuid
+                    << std::endl;
             }
-            safeOutput("_______________________\n");
+            safeOutput("___________________________________________\n");
         }
     }
     else if (tokenList.size() == 2 && tokenList[0] == "list" && tokenList[1] == "net")
@@ -97,13 +100,15 @@ bool UI::parseCommand()
         }
         else
         {
-            safeOutput("\n_________FILES_________\n");
-            safeOutput("NAME | OWNER_IP | COPY_IP");
+            safeOutput("\n_____________________________FILES_____________________________\n");
+            std::cout << std::left << std::setw(30) << "NAME" << std::setw(20) << "OWNER IP" << std::setw(20)
+                << "POSSESSOR IP" << std::endl;
             for (std::pair<struct in_addr, ResourceHeader> res : resourceList)
             {
-                std::cout << res.second.name << " " << res.second.uuid << " " << inet_ntoa(res.first) << std::endl;
+                std::cout << std::left << std::setw(30) << res.second.name << std::setw(20) << res.second.uuid
+                    << std::setw(20) << inet_ntoa(res.first) << std::endl;
             }
-            safeOutput("_______________________\n");
+            safeOutput("_______________________________________________________________\n");
         }
     }
     else if (tokenList.size() == 1 && tokenList[0] == "getinf")
