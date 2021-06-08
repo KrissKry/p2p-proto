@@ -249,8 +249,8 @@ void Supervisor::handleDownload(int fd, ResourceHeader resHeader)
 
 void Supervisor::handleNotFound(int fd, ResourceHeader resHeader)
 {
-    std::string senderIp = networkHandler->getIPFromSocket(fd);
-//    fileHandler->deleteFromNetList(resHeader, senderIp);
+    struct in_addr senderIp = networkHandler->getIPFromSocket(fd);
+    fileHandler->deleteFromNetList(resHeader, senderIp);
 }
 
 int Supervisor::createFile(const std::string &path, const std::string &name)
