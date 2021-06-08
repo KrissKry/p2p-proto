@@ -17,5 +17,5 @@ add_executable(protocole
     src/Supervisor.cpp
     src/UI.cpp
     src/TCPConnector.cpp
-    # src/SyncedDeque.cpp
+    src/NetworkHandler.cpp
     )
