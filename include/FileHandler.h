@@ -16,6 +16,8 @@ class FileHandler
 private:
 	std::vector<Resource> OwnFileList;
 	std::vector<std::pair<struct in_addr, ResourceHeader>> NetFileList;
+    std::mutex own_tx;
+    std::mutex net_tx;
 
 public:
 	ResourceHeader AddFile(const char *path, const char *name, struct in_addr ip)
@@ -26,19 +28,24 @@ public:
 		Resource res{};
 
 		//sprawdzenie czy nie ma pliku o takiej samej nazwie
-		for (auto &it : OwnFileList)
-		{
-			if (strcmp(it.header.name, name) == 0)
-				return res.header;
-		}
-
-        for (auto &it : NetFileList)
         {
-            if (strcmp(it.second.name, name) == 0)
-                return res.header;
+            std::unique_lock<std::mutex> lock(own_tx);
+            for (auto &it : OwnFileList)
+            {
+                if (strcmp(it.header.name, name) == 0)
+                    return res.header;
+            }
+        }
+        {
+            std::unique_lock<std::mutex> lock(net_tx);
+            for (auto &it : NetFileList)
+            {
+                if (strcmp(it.second.name, name) == 0)
+                    return res.header;
+            }
         }
 
-		std::ifstream file;
+        std::ifstream file;
 		file.open(path);
 		if (file.is_open())
 		{
@@ -60,8 +67,14 @@ public:
 								   .count();
 		res.header.size = res.data.size();
 
-		OwnFileList.push_back(res);
-		NetFileList.emplace_back(ip, res.header);
+        {
+            std::unique_lock<std::mutex> lock(own_tx);
+            OwnFileList.push_back(res);
+        }
+        {
+            std::unique_lock<std::mutex> lock(net_tx);
+            NetFileList.emplace_back(ip, res.header);
+        }
 		return res.header;
 	}
 
@@ -70,11 +83,14 @@ public:
 		const auto p1 = std::chrono::system_clock::now();
 
 		//sprawdzenie czy nie ma pliku o takiej samej nazwie
-		for (auto &it : OwnFileList)
-		{
-			if (strcmp(it.header.name, resource.header.name) == 0)
-				return 1;
-		}
+        {
+            std::unique_lock<std::mutex> lock(own_tx);
+            for (auto &it : OwnFileList)
+            {
+                if (strcmp(it.header.name, resource.header.name) == 0)
+                    return 1;
+            }
+        }
 
 		std::ofstream file;
 		file.open(resource.header.name);
@@ -87,21 +103,30 @@ public:
 		}
 		file.close();
 
-		OwnFileList.push_back(resource);
-		NetFileList.emplace_back(ip, resource.header);
+        {
+            std::unique_lock<std::mutex> lock(own_tx);
+            OwnFileList.push_back(resource);
+        }
+        {
+            std::unique_lock<std::mutex> lock(net_tx);
+            NetFileList.emplace_back(ip, resource.header);
+        }
 		return 0;
 	}
 
 	// metoda nie jest bezpieczna ale je�li wybieramy z listy to whatever
 	Resource getFile(const char *name)
 	{
-		for (auto &it : OwnFileList)
-		{
-			if (strcmp(it.header.name, name) == 0)
-			{
-				return it;
-			}
-		}
+        {
+            std::unique_lock<std::mutex> lock(own_tx);
+            for (auto &it : OwnFileList)
+            {
+                if (strcmp(it.header.name, name) == 0)
+                {
+                    return it;
+                }
+            }
+        }
 		return Resource{};
 	}
 
@@ -109,16 +134,17 @@ public:
 	int deleteOwnFile(ResourceHeader rh)
 	{
 		std::vector<Resource>::iterator it;
-		for (it = OwnFileList.begin(); it != OwnFileList.end(); it++)
-		{
-			if (strcmp(it->header.name, rh.name) == 0)
-			{
-				// if (remove(rh.name) != 0)
-				// 	return 1;
-				OwnFileList.erase(it);
-				return 0;
-			}
-		}
+        {
+            std::unique_lock<std::mutex> lock(own_tx);
+            for (it = OwnFileList.begin(); it != OwnFileList.end(); it++) {
+                if (strcmp(it->header.name, rh.name) == 0) {
+                    // if (remove(rh.name) != 0)
+                    // 	return 1;
+                    OwnFileList.erase(it);
+                    return 0;
+                }
+            }
+        }
 		return 1;
 	}
 
@@ -126,34 +152,34 @@ public:
 	int deleteNotOwnFile(ResourceHeader rh)
 	{
 		std::vector<Resource>::iterator it;
-		for (it = OwnFileList.begin(); it != OwnFileList.end(); it++)
-		{
-			if (strcmp(it->header.name, rh.name) == 0)
-			{
-				// if (remove(rh.name) != 0)
-				// 	return 1;
-				OwnFileList.erase(it);
-				return 0;
-			}
-		}
+        {
+            std::unique_lock<std::mutex> lock(own_tx);
+            for (it = OwnFileList.begin(); it != OwnFileList.end(); it++) {
+                if (strcmp(it->header.name, rh.name) == 0) {
+                    // if (remove(rh.name) != 0)
+                    // 	return 1;
+                    OwnFileList.erase(it);
+                    return 0;
+                }
+            }
+        }
 		return 1;
 	}
 
 	int deleteFromNetList(ResourceHeader rh, struct in_addr ip)
 	{
-		auto it = NetFileList.begin();
-		while (it != NetFileList.end())
-		{
-			if (strcmp(it->second.name, rh.name) == 0 && (it->first.s_addr == ip.s_addr))
-			{
-				std::cout << "deleteFromNetList\n";
-				it = NetFileList.erase(it);
-			}
-			else
-			{
-				++it;
-			}
-		}
+        {
+            std::unique_lock<std::mutex> lock(net_tx);
+            auto it = NetFileList.begin();
+            while (it != NetFileList.end()) {
+                if (strcmp(it->second.name, rh.name) == 0 && (it->first.s_addr == ip.s_addr)) {
+                    std::cout << "deleteFromNetList\n";
+                    it = NetFileList.erase(it);
+                } else {
+                    ++it;
+                }
+            }
+        }
 		return 0;
 	}
 
@@ -169,39 +195,44 @@ public:
 
 	ResourceHeader GetFileInfo(const char *name)
 	{
-		for (auto &it : NetFileList)
-		{
-			if (strcmp(it.second.name, name) == 0)
-			{
-				return it.second;
-			}
-		}
+        {
+            std::unique_lock<std::mutex> lock(net_tx);
+            for (auto &it : NetFileList) {
+                if (strcmp(it.second.name, name) == 0) {
+                    return it.second;
+                }
+            }
+        }
 		return ResourceHeader{};
 	}
 
 	int NewFileInfo(ResourceHeader header, struct in_addr ip)
 	{
-		for (auto &it : NetFileList)
-		{
-			if (strcmp(it.second.name, header.name) == 0 && (it.first.s_addr == ip.s_addr))
-			{
-				if (HELP_LOG)
-					std::cout << "FH:: " << header.name << " || " << inet_ntoa(it.first) << " || " << inet_ntoa(ip) << "\n";
-				return -1;
-			}
-		}
-		NetFileList.emplace_back(ip, header);
+        {
+            std::unique_lock<std::mutex> lock(net_tx);
+            for (auto &it : NetFileList) {
+                if (strcmp(it.second.name, header.name) == 0 && (it.first.s_addr == ip.s_addr)) {
+                    if (HELP_LOG)
+                        std::cout << "FH:: " << header.name << " || " << inet_ntoa(it.first) << " || " << inet_ntoa(ip)
+                                  << "\n";
+                    return -1;
+                }
+            }
+            NetFileList.emplace_back(ip, header);
+        }
 		return 0;
 	}
 
 	std::vector<Resource> getOwnFileList()
 	{
-		return OwnFileList;
+        std::unique_lock<std::mutex> lock(own_tx);
+        return OwnFileList;
 	}
 
 	std::vector<std::pair<struct in_addr, ResourceHeader>> getNetFileList()
 	{
-		return NetFileList;
+        std::unique_lock<std::mutex> lock(net_tx);
+        return NetFileList;
 	}
 
 	void ShowOwnFiles()
@@ -209,10 +240,12 @@ public:
 		if (HELP_LOG)
 			std::cout << "FH:: __NAME__\n";
 		std::vector<Resource>::iterator it;
-		for (it = OwnFileList.begin(); it != OwnFileList.end(); it++)
-		{
-			std::cout << "   " << it->header.name << "\n";
-		}
+        {
+            std::unique_lock<std::mutex> lock(own_tx);
+            for (it = OwnFileList.begin(); it != OwnFileList.end(); it++) {
+                std::cout << "   " << it->header.name << "\n";
+            }
+        }
 	}
 
 	void ShowNetFiles()
@@ -221,10 +254,12 @@ public:
 			std::cout << "FH:: __NAME__ || ___OWNER_IP___ || ___COPY_IP___\n";
 
 		std::vector<std::pair<struct in_addr, ResourceHeader>>::iterator it;
-		for (it = NetFileList.begin(); it != NetFileList.end(); it++)
-		{
-			std::cout << it->second.name << " || " << it->second.uuid << " || " << it->first.s_addr << std::endl;
-		}
+        {
+            std::unique_lock<std::mutex> lock(net_tx);
+            for (it = NetFileList.begin(); it != NetFileList.end(); it++) {
+                std::cout << it->second.name << " || " << it->second.uuid << " || " << it->first.s_addr << std::endl;
+            }
+        }
 	}
 };
 #endif
