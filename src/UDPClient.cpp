@@ -2,7 +2,7 @@
 #include <unistd.h>
 int UDPClient::broadcast(ProtoPacket protoPacket)
 {
-
+    //create udp socket
     int socketDesc = socket(AF_INET, SOCK_DGRAM, 0);
     if (DEBUG_LOG)
         std::cout << "socketDesc " << socketDesc << std::endl;
@@ -31,7 +31,6 @@ int UDPClient::broadcast(ProtoPacket protoPacket)
     addr.sin_port = htons(UDP_PORT);
 
     //send data
-    // int feed = sendto(socketDesc, &protoPacket, sizeof(protoPacket), 0, (struct sockaddr *)&addr, sizeof(addr));
     int feed = sendto(socketDesc, &protoPacket, sizeof(protoPacket), 0, (struct sockaddr *)&addr, sizeof(addr));
 
     if (feed < 0)
@@ -39,6 +38,7 @@ int UDPClient::broadcast(ProtoPacket protoPacket)
         perror("UDP broadcast:sendto");
         return -1;
     }
+
     close(socketDesc);
     return 0;
 }
