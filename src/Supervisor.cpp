@@ -102,7 +102,7 @@ void Supervisor::udpQueueListener()
         udp_upflow.pop(message);
         if (stop)
             return;
-        std::cout << "UDP Upflow unblocked \n";
+
         switch (message.second.command)
         {
         case Commands::CREATE:
@@ -110,6 +110,7 @@ void Supervisor::udpQueueListener()
                 std::cout << "[DEBUG] SV:: udpQueueListener:switch create"
                           << "\n";
             handleCreate(message.second.header, message.first);
+            std::cout << "[INFO]New file in network: " << message.second.header.name << std::endl;
             break;
         case Commands::DELETE:
             handleDelete(message.second.header, message.first);
@@ -242,7 +243,9 @@ void Supervisor::handleDownload(int fd, ResourceHeader resHeader)
         if (DEBUG_LOG)
             std::cout << "[DEBUG] SV:: Res.header not empty\n";
         sendUpload(fd, res);
-    } else {
+    }
+    else
+    {
         sendNotFound(fd, res);
     }
 }
