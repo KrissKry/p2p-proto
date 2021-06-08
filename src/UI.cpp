@@ -13,11 +13,8 @@ UI::UI(Supervisor *supervisor) : supervisor(supervisor)
 
 void UI::run()
 {
-
-    while (parseCommand())
-    {
-        printOptions();
-    };
+    printOptions();
+    while (parseCommand()) {};
 }
 
 bool UI::parseCommand()
@@ -42,7 +39,7 @@ bool UI::parseCommand()
         }
         else
         {
-            safeOutput("\n>>>ERROR\n");
+            safeOutput("\n>>> ERROR\n");
         }
     }
     else if (tokenList.size() == 2 && tokenList[0] == "download")
@@ -55,7 +52,7 @@ bool UI::parseCommand()
         }
         else
         {
-            safeOutput("\n>>>ERROR\n");
+            safeOutput("\n>>> ERROR\n");
         }
     }
     else if (tokenList.size() == 2 && tokenList[0] == "delete")
@@ -68,23 +65,26 @@ bool UI::parseCommand()
         }
         else
         {
-            safeOutput("\n>>>ERROR\n");
+            safeOutput("\n>>> ERROR\n");
         }
     }
     else if (tokenList.size() == 2 && tokenList[0] == "list" && tokenList[1] == "disk")
     {
         std::vector<Resource> resourceList = supervisor->listDisk();
 
+
         if (resourceList.empty())
         {
-            safeOutput("\n>>>No resources locally\n");
+            safeOutput("\n>>> No resources locally\n");
         }
         else
         {
+            safeOutput("\n_________FILES_________\n");
             for (const Resource &res : resourceList)
             {
                 std::cout << res.header.name << " " << res.header.uuid << std::endl;
             }
+            safeOutput("_______________________\n");
         }
     }
     else if (tokenList.size() == 2 && tokenList[0] == "list" && tokenList[1] == "net")
@@ -98,10 +98,12 @@ bool UI::parseCommand()
         else
         {
             safeOutput("\n_________FILES_________\n");
+            safeOutput("NAME | OWNER_IP | COPY_IP");
             for (std::pair<struct in_addr, ResourceHeader> res : resourceList)
             {
                 std::cout << res.second.name << " " << res.second.uuid << " " << inet_ntoa(res.first) << std::endl;
             }
+            safeOutput("_______________________\n");
         }
     }
     else if (tokenList.size() == 1 && tokenList[0] == "getinf")
@@ -113,9 +115,13 @@ bool UI::parseCommand()
     {
         return true;
     }
+    else if (tokenList.size() == 1 && tokenList[0] == "help" ) 
+    {
+        printOptions();
+    }
     else
     {
-        safeOutput("\n>>>Invalid command\n");
+        safeOutput("\n>>> Invalid command\n");
     }
     return true;
 }
@@ -143,6 +149,7 @@ void UI::printOptions()
     std::cout << "list disk\n";
     std::cout << "list net\n";
     std::cout << "getinf\n";
+    std::cout << "help\n";
     std::cout << "quit\n";
     std::cout << "_______________________________________\n";
 }

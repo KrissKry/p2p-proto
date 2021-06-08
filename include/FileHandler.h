@@ -173,7 +173,7 @@ public:
             auto it = NetFileList.begin();
             while (it != NetFileList.end()) {
                 if (strcmp(it->second.name, rh.name) == 0 && (it->first.s_addr == ip.s_addr)) {
-                    std::cout << "deleteFromNetList\n";
+                    // if (INFO_LOG) std::cout << "[I] Deleting file " << rh.name << " from netlist\n";
                     it = NetFileList.erase(it);
                 } else {
                     ++it;
@@ -237,7 +237,7 @@ public:
 
 	void showOwnFiles()
 	{
-		if (HELP_LOG)
+		if (INFO_LOG)
 			std::cout << "FH:: __NAME__\n";
 		std::vector<Resource>::iterator it;
         {
@@ -250,7 +250,7 @@ public:
 
 	void showNetFiles()
 	{
-		if (HELP_LOG)
+		if (INFO_LOG)
 			std::cout << "FH:: __NAME__ || ___OWNER_IP___ || ___COPY_IP___\n";
 
 		std::vector<std::pair<struct in_addr, ResourceHeader>>::iterator it;

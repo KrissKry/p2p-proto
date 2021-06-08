@@ -107,10 +107,10 @@ void Supervisor::udpQueueListener()
         {
         case Commands::CREATE:
             if (DEBUG_LOG)
-                std::cout << "[DEBUG] SV:: udpQueueListener:switch create"
-                          << "\n";
+                std::cout << "[DEBUG] SV:: udpQueueListener:switch create" << "\n";
+                
             handleCreate(message.second.header, message.first);
-            std::cout << "[INFO]New file in network: " << message.second.header.name << std::endl;
+            std::cout << "[I] New file in network: " << message.second.header.name << "\n\n";
             break;
         case Commands::DELETE:
             handleDelete(message.second.header, message.first);
@@ -132,8 +132,8 @@ void Supervisor::broadcastCreate(ResourceHeader resourceHeader)
     protoPacket.command = Commands::CREATE;
     protoPacket.header = resourceHeader;
 
-    if (INFO_LOG)
-        std::cout << "[I] SV:: broadcastCreate for " << resourceHeader.name << "\n";
+    if (DEBUG_LOG) std::cout << "[DEBUG] SV:: broadcastCreate for " << resourceHeader.name << "\n";
+
     udp_downflow.push(protoPacket);
 }
 
