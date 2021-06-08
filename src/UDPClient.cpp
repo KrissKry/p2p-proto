@@ -80,7 +80,7 @@ int UDPClient::server(SyncedDeque<std::pair<struct in_addr, ProtoPacket>> &udp_u
         FD_ZERO(&readfds);
         FD_SET(socketDesc, &readfds);
 
-        int selectFeed = select(socketDesc + 1, &readfds, NULL, NULL, 0);
+        int selectFeed = select(socketDesc + 1, &readfds, nullptr, nullptr, nullptr);
         //number of fdesc actions
         if (selectFeed > 0)
         {

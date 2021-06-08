@@ -16,7 +16,7 @@ private:
 
 public:
     RandomGenerator() : m_mt((std::random_device())()) {} //init marsenne-twister rg
-    ~RandomGenerator() {}
+    ~RandomGenerator() = default;
 
     bool transmissionFailure()
     {

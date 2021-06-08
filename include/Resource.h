@@ -13,8 +13,6 @@ namespace Commands
     const char NOT_FOUND = '5';
     const char GET_INFO = '6';
     const char SEND_INFO = '7';
-    const char DUPLICATE = '8';
-
 }
 
 // #pragma pack(push, 1)
