@@ -67,6 +67,18 @@ public:
     */
     int closeAllSockets();
 
+    std::string getIPFromSocket(int sockfd) {
+        struct sockaddr_in addr;
+        socklen_t addr_size = sizeof(addr);
+
+        int res = getpeername(sockfd, (struct sockaddr *)&addr, &addr_size);
+
+        std::string ip = inet_ntoa(addr.sin_addr);
+        // std::cout << "[WOOOO] " <<  ip << "\n";
+
+        return ip;
+    }
+
 private:
     std::deque<std::shared_ptr<std::thread>> network_threads;
     std::mutex deque_lock;
@@ -95,17 +107,6 @@ private:
     int openNewSocket();
 
 
-    std::string getIPFromSocket(int sockfd) {
-        struct sockaddr_in addr;
-        socklen_t addr_size = sizeof(addr);
-
-        int res = getpeername(sockfd, (struct sockaddr *)&addr, &addr_size);
-
-        std::string ip = inet_ntoa(addr.sin_addr);
-        // std::cout << "[WOOOO] " <<  ip << "\n";
-
-        return ip;
-    }
 };
 
 #endif
