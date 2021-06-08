@@ -90,7 +90,11 @@ int UDPClient::server(SyncedDeque<std::pair<struct in_addr, ProtoPacket>> &udp_u
 
                 if (receivedBytes > 0)
                 {
-                    udp_upflow.push(std::pair<struct in_addr, ProtoPacket>(clientAddr.sin_addr, protoPacket));
+                    //packet loss simulation
+                    if (randomGenerator.udpPacketLoss())
+                    {
+                        udp_upflow.push(std::pair<struct in_addr, ProtoPacket>(clientAddr.sin_addr, protoPacket));
+                    }
                 }
             }
         }

@@ -3,31 +3,45 @@
 
 #include <random>
 
-class RandomGenerator {
-    
-    private:
-        std::mt19937 m_mt;
+class RandomGenerator
+{
 
-        double transmission_error_threshold = 0.995; 
+private:
+    std::mt19937 m_mt;
 
-        bool error_enabled = true;
+    double transmission_error_threshold = 0.995;
+    double udp_packet_loss_threshold = 0.995;
 
-    public:
+    bool error_enabled = true;
 
-        RandomGenerator() : m_mt( (std::random_device()) ()) {} //init marsenne-twister rg
-        ~RandomGenerator() {}
+public:
+    RandomGenerator() : m_mt((std::random_device())()) {} //init marsenne-twister rg
+    ~RandomGenerator() {}
 
-        bool transmissionFailure() {
-            if (error_enabled) {
+    bool transmissionFailure()
+    {
+        if (error_enabled)
+        {
 
-                std::uniform_real_distribution<double> dist(0.0, 1.0);
+            std::uniform_real_distribution<double> dist(0.0, 1.0);
 
-                return dist(m_mt) >= transmission_error_threshold;
-            
-            } else 
-                return false;
+            return dist(m_mt) >= transmission_error_threshold;
         }
+        else
+            return false;
+    }
+    bool udpPacketLoss()
+    {
+        if (error_enabled)
+        {
 
+            std::uniform_real_distribution<double> dist(0.0, 1.0);
+
+            return dist(m_mt) >= udp_packet_loss_threshold;
+        }
+        else
+            return false;
+    }
 };
 
 #endif

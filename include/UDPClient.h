@@ -12,11 +12,13 @@
 #include <sys/select.h>
 #include "Resource.h"
 #include "SyncedDeque.h"
+#include "RandomGenerator.h"
 
 class UDPClient
 {
 private:
     const int UDP_PORT = 10000;
+    RandomGenerator randomGenerator;
 
 public:
     int broadcast(ProtoPacket protoPacket);
