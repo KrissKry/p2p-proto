@@ -77,13 +77,14 @@ int TCPConnector::sendData(int sockfd, void *ptr, unsigned long long data_size) 
     int sockopt = getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &error_code, &error_code_size); */
 
     if (INFO_LOG) std::cout << "[I] TCP:: Beginning upload of " << data_size << " bytes.\n"; 
-    bool resp;
+    bool resp = false;
     while( (bytes_sent = send(sockfd, data_ptr, data_size, 0) ) > 0) {
-
-        resp = rg.transmissionFailure();
-        if ( resp || bytes_sent < 0 ) {
-            std::cout << "[ERR] Simulated transmission error\n";
-            return -1;
+        if(ERROR_SIMULATION) {
+            resp = rg.transmissionFailure();
+            if (resp || bytes_sent < 0) {
+                std::cout << "[ERR] Simulated transmission error\n";
+                return -1;
+            }
         }
         
         data_size -= bytes_sent;
