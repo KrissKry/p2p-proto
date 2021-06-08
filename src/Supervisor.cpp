@@ -201,7 +201,7 @@ void Supervisor::handleGetInfo()
 
 void Supervisor::handleCreate(ResourceHeader resourceHeader, struct in_addr senderIp)
 {
-    fileHandler->NewFileInfo(resourceHeader, senderIp);
+    fileHandler->newFileInfo(resourceHeader, senderIp);
 }
 
 void Supervisor::handleDelete(ResourceHeader resourceHeader, struct in_addr senderIp)
@@ -258,7 +258,7 @@ void Supervisor::handleNotFound(int fd, ResourceHeader resHeader)
 
 int Supervisor::createFile(const std::string &path, const std::string &name)
 {
-    ResourceHeader header = fileHandler->AddFile(path.c_str(), name.c_str(), ip);
+    ResourceHeader header = fileHandler->addFile(path.c_str(), name.c_str(), ip);
     if (strcmp(header.name, "") != 0)
     {
         if (DEBUG_LOG)
@@ -271,7 +271,7 @@ int Supervisor::createFile(const std::string &path, const std::string &name)
 
 int Supervisor::downloadFile(const std::string &name)
 {
-    ResourceHeader header = fileHandler->GetFileInfo(name.c_str());
+    ResourceHeader header = fileHandler->getFileInfo(name.c_str());
     if (strcmp(header.name, "") != 0)
     {
         std::thread tcpServer(&NetworkHandler::runTCPClientThread, networkHandler, header);

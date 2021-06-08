@@ -20,7 +20,7 @@ private:
     std::mutex net_tx;
 
 public:
-	ResourceHeader AddFile(const char *path, const char *name, struct in_addr ip)
+	ResourceHeader addFile(const char *path, const char *name, struct in_addr ip)
 	{
 
 		const auto p1 = std::chrono::system_clock::now();
@@ -193,7 +193,7 @@ public:
 		return false;
 	}
 
-	ResourceHeader GetFileInfo(const char *name)
+	ResourceHeader getFileInfo(const char *name)
 	{
         {
             std::unique_lock<std::mutex> lock(net_tx);
@@ -206,7 +206,7 @@ public:
 		return ResourceHeader{};
 	}
 
-	int NewFileInfo(ResourceHeader header, struct in_addr ip)
+	int newFileInfo(ResourceHeader header, struct in_addr ip)
 	{
         {
             std::unique_lock<std::mutex> lock(net_tx);
@@ -235,7 +235,7 @@ public:
         return NetFileList;
 	}
 
-	void ShowOwnFiles()
+	void showOwnFiles()
 	{
 		if (HELP_LOG)
 			std::cout << "FH:: __NAME__\n";
@@ -248,7 +248,7 @@ public:
         }
 	}
 
-	void ShowNetFiles()
+	void showNetFiles()
 	{
 		if (HELP_LOG)
 			std::cout << "FH:: __NAME__ || ___OWNER_IP___ || ___COPY_IP___\n";
