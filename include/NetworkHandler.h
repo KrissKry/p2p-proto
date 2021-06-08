@@ -157,36 +157,37 @@ public:
         //send header
         packet.data.resize(packet.header.size);
 
-        if ( tcp_connections.at(client_index).first->setupClient() < 0) {
+        if (tcp_connections.at(client_index).first->setupClient() < 0)
+        {
             strerror(errno);
             return -1;
         }
 
-        if (INFO_LOG) std::cout << "[I] NH:: Sending request for " << packet.header.name << " on socket " << client_socket << "\n";
+        if (INFO_LOG)
+            std::cout << "[I] NH:: Sending request for " << packet.header.name << " on socket " << client_socket << "\n";
 
-        int resp {};
-        if ( (resp = tcp_connections.at(client_index).first->sendData(client_socket, static_cast<void *>(&packet.header), sizeof(packet.header))) < 0)
+        int resp{};
+        if ((resp = tcp_connections.at(client_index).first->sendData(client_socket, static_cast<void *>(&packet.header), sizeof(packet.header))) < 0)
             return -1;
 
-
         //receive header
-        if (tcp_connections.at(client_index).first->receiveData(0, static_cast<void *>(&packet.header), sizeof(packet.header)) < 0) {
+        if (tcp_connections.at(client_index).first->receiveData(0, static_cast<void *>(&packet.header), sizeof(packet.header)) < 0)
+        {
             std::cout << "[ERR] Confirming header for " << packet.header.name << " failed.\n";
             packet.data.clear();
             packet.data.resize(0);
             return -1;
         }
 
-
         if (INFO_LOG)
             std::cout << "[I] NH:: Received confirmation for " << packet.header.name << " on socket " << socket << "\n";
-
 
         //resize data accordingly once again
         packet.data.resize(packet.header.size);
 
         //receive data
-        if (tcp_connections.at(client_index).first->receiveData(0, static_cast<void *>(&packet.data[0]), packet.data.size()) < 0) {
+        if (tcp_connections.at(client_index).first->receiveData(0, static_cast<void *>(&packet.data[0]), packet.data.size()) < 0)
+        {
 
             std::cout << "[ERR] Receiving complete data for " << packet.header.name << " failed. Erasing memory and aborting.\n";
             packet.data.clear();

@@ -140,6 +140,7 @@ public:
 		{
 			if (strcmp(it->second.name, rh.name) == 0 && (it->first.s_addr == ip.s_addr))
 			{
+				std::cout << "deleteFromNetList\n";
 				it = NetFileList.erase(it);
 			}
 			else
@@ -178,7 +179,8 @@ public:
 		{
 			if (strcmp(it.second.name, header.name) == 0 && (it.first.s_addr == ip.s_addr))
 			{
-				if (HELP_LOG) std::cout << "FH:: "<< header.name<< " || " << inet_ntoa(it.first) << " || " << inet_ntoa(ip) << "\n";
+				if (HELP_LOG)
+					std::cout << "FH:: " << header.name << " || " << inet_ntoa(it.first) << " || " << inet_ntoa(ip) << "\n";
 				return -1;
 			}
 		}
@@ -198,7 +200,8 @@ public:
 
 	void ShowOwnFiles()
 	{
-		if (HELP_LOG) std::cout << "FH:: __NAME__\n";
+		if (HELP_LOG)
+			std::cout << "FH:: __NAME__\n";
 		std::vector<Resource>::iterator it;
 		for (it = OwnFileList.begin(); it != OwnFileList.end(); it++)
 		{
@@ -208,7 +211,8 @@ public:
 
 	void ShowNetFiles()
 	{
-		if (HELP_LOG) std::cout << "FH:: __NAME__ || ___OWNER_IP___ || ___COPY_IP___\n";
+		if (HELP_LOG)
+			std::cout << "FH:: __NAME__ || ___OWNER_IP___ || ___COPY_IP___\n";
 
 		std::vector<std::pair<struct in_addr, ResourceHeader>>::iterator it;
 		for (it = NetFileList.begin(); it != NetFileList.end(); it++)

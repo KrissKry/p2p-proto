@@ -192,10 +192,15 @@ void Supervisor::handleCreate(ResourceHeader resourceHeader, struct in_addr send
 
 void Supervisor::handleDelete(ResourceHeader resourceHeader, struct in_addr senderIp)
 {
+
+    // std::cout << "handleDelete: start\n";
     fileHandler->deleteFromNetList(resourceHeader, senderIp);
 
-    if (resourceHeader.uuid == inet_ntoa(ip))
+    // std::cout << "handleDelete: adress owner: " << resourceHeader.uuid << " " << inet_ntoa(senderIp) << strcmp(resourceHeader.uuid, inet_ntoa(senderIp)) << std::endl;
+
+    if (strcmp(resourceHeader.uuid, inet_ntoa(senderIp)) == 0)
     {
+        // std::cout << "handleDelete: deleting local files\n";
         int result = fileHandler->deleteOwnFile(resourceHeader);
         if (result == 0)
         {
