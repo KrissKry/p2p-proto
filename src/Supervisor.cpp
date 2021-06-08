@@ -35,7 +35,7 @@ void Supervisor::run()
     std::thread tcpServer;
     if (res == 0)
     {
-        tcpServer = std::thread(&NetworkHandler::handleTCPServer, networkHandler, 0);
+        tcpServer = std::thread(&NetworkHandler::runTCPServer, networkHandler, 0);
         // std::cout << "          tcpServer " << tcpServer.get_id() << "\n";
 
         tcpServer.detach();
