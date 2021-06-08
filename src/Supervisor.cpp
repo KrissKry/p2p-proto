@@ -32,9 +32,10 @@ void Supervisor::run()
     // std::cout << "          tcpQueueListener " << tcpQueueListener.get_id() << "\n";
     // std::cout << "          udpQueueListener " << udpQueueListener.get_id() << "\n";
     int res = networkHandler->createNewTCPServer();
+    std::thread tcpServer;
     if (res == 0)
     {
-        std::thread tcpServer(&NetworkHandler::handleTCPServer, networkHandler, 0);
+        tcpServer = std::thread(&NetworkHandler::handleTCPServer, networkHandler, 0);
         // std::cout << "          tcpServer " << tcpServer.get_id() << "\n";
 
         tcpServer.detach();
@@ -43,13 +44,16 @@ void Supervisor::run()
     std::thread udpServer(&NetworkHandler::udpServerRun, networkHandler, std::ref(this->stop));
     // std::cout << "          udpServer " << udpServer.get_id() << "\n";
 
-    udpServer.detach();
+    // udpServer.detach();
     std::thread udpDownflowQueListener(&NetworkHandler::udpDownflowQueueListener, networkHandler, std::ref(this->stop));
     // std::cout << "          udpDownflowQueListener " << udpDownflowQueListener.get_id() << "\n";
-
-    udpDownflowQueListener.detach();
+    broadcastGetInfo();
+    // udpDownflowQueListener.detach();
     if (DEBUG_LOG)
         std::cout << "[DEBUG] SV:: udpDownlow detach\n";
+
+    udpServer.join();
+    udpDownflowQueListener.join();
     tcpQueueListener.join();
     udpQueueListener.join();
 }
@@ -140,12 +144,12 @@ void Supervisor::broadcastDelete(ResourceHeader resourceHeader)
     udp_downflow.push(protoPacket);
 }
 
-void Supervisor::broadcastGetInfo(ResourceHeader resourceHeader)
+void Supervisor::broadcastGetInfo()
 {
     ProtoPacket protoPacket;
     memset(&protoPacket, 0, sizeof(ProtoPacket));
     protoPacket.command = Commands::GET_INFO;
-    protoPacket.header = resourceHeader;
+
     // protoPacket.data.resize(0);
     udp_downflow.push(protoPacket);
 }
@@ -164,7 +168,7 @@ void Supervisor::sendDownload(ResourceHeader resourceHeader)
 void Supervisor::sendUpload(int fd, const Resource &res)
 {
     ProtoPacket protoPacket;
-    
+
     protoPacket.command = Commands::UPLOAD;
     protoPacket.header = res.header;
     protoPacket.data = res.data;

@@ -15,7 +15,6 @@
 #include "NetworkHandler.h"
 #include "FileHandler.h"
 
-
 class Supervisor
 {
 private:
@@ -41,9 +40,9 @@ private:
     void handleUpload(const Resource &res);
     void broadcastCreate(ResourceHeader resourceHeader);
     void broadcastDelete(ResourceHeader resourceHeader);
-    void broadcastGetInfo(ResourceHeader resourceHeader);
+    void broadcastGetInfo();
     void sendDownload(ResourceHeader resourceHeader);
-    void sendUpload(int fd, const Resource& res);
+    void sendUpload(int fd, const Resource &res);
 
 public:
     Supervisor(struct in_addr);

@@ -23,7 +23,8 @@ public:
     {
 
         int socketDesc = socket(AF_INET, SOCK_DGRAM, 0);
-        if (DEBUG_LOG) std::cout << "socketDesc " << socketDesc << std::endl;
+        if (DEBUG_LOG)
+            std::cout << "socketDesc " << socketDesc << std::endl;
 
         if (socketDesc < 0)
         {
@@ -64,7 +65,8 @@ public:
         int socketDesc = socket(AF_INET, SOCK_DGRAM, 0);
         if (socketDesc < 0)
         {
-            if (DEBUG_LOG) std::cout << "socketDesc" << std::endl;
+            if (DEBUG_LOG)
+                std::cout << "socketDesc" << std::endl;
             perror("sock error");
         }
         //set address struct
@@ -81,12 +83,15 @@ public:
             perror("bind error");
             exit(1);
         }
+        ProtoPacket protoPacket;
+        memset(&protoPacket, 0, sizeof(struct ProtoPacket));
+        fd_set readfds;
+        struct sockaddr_in clientAddr;
+        socklen_t addrLen = sizeof(clientAddr);
+
         while (!stop)
         {
-            ProtoPacket protoPacket;
-            fd_set readfds;
-            struct sockaddr_in clientAddr;
-            socklen_t addrLen = sizeof(clientAddr);
+
             FD_ZERO(&readfds);
             FD_SET(socketDesc, &readfds);
 
