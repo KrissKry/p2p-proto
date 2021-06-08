@@ -9,7 +9,7 @@ class RandomGenerator
 private:
     std::mt19937 m_mt;
 
-    double transmission_error_threshold = 0.995;
+    double transmission_error_threshold = 0.5;
     double udp_packet_loss_threshold = 0.995;
 
     bool error_enabled = true;
@@ -24,8 +24,9 @@ public:
         {
 
             std::uniform_real_distribution<double> dist(0.0, 1.0);
-
-            return dist(m_mt) >= transmission_error_threshold;
+            double val = dist(m_mt);
+            std::cout<< "[RG] value: " << val << "\n";
+            return (val >= transmission_error_threshold);
         }
         else
             return false;
