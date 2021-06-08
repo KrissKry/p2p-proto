@@ -53,8 +53,11 @@ int NetworkHandler::handleTCPServerThread(int socket)
     if (INFO_LOG) std::cout << "[I] NH:: Got response from SV " << pair.second.header.name << "\n";
 
     //send command
-    if (server_ref.first->sendData(socket, static_cast<void *>(&pair.second.command), sizeof(pair.second.command)) < 0)
+    if (server_ref.first->sendData(socket, static_cast<void *>(&pair.second.command), sizeof(pair.second.command)) < 0) {
+        close(socket);
         return -1;
+
+    }
 
     //exit on NOT_FOUND
     if (pair.second.command == Commands::NOT_FOUND) {
@@ -63,14 +66,18 @@ int NetworkHandler::handleTCPServerThread(int socket)
     }
 
     //send packet header
-    if (server_ref.first->sendData(socket, static_cast<void *>(&pair.second.header), sizeof(pair.second.header)) < 0)
+    if (server_ref.first->sendData(socket, static_cast<void *>(&pair.second.header), sizeof(pair.second.header)) < 0) {
+        close(socket);
         return -1;
+    }
 
     if (INFO_LOG) std::cout << "[I] NH:: Beginning transmission of data from " << pair.second.header.name << "\n";
     
     //send packet data
-    if (server_ref.first->sendData(socket, static_cast<void *>(&pair.second.data[0]), pair.second.data.size()) < 0)
+    if (server_ref.first->sendData(socket, static_cast<void *>(&pair.second.data[0]), pair.second.data.size()) < 0) {
+        close(socket);
         return -1;
+    }
 
     return 0;
 }
@@ -118,8 +125,10 @@ int NetworkHandler::runTCPClientThread(const ResourceHeader &header)
     if (INFO_LOG) std::cout << "[I] NH:: Sending request for " << packet.header.name << " on socket " << client_socket << "\n";
 
     int resp {};
-    if ( (resp = connection_ref.first->sendData(client_socket, static_cast<void *>(&packet.header), sizeof(packet.header))) < 0)
+    if ( (resp = connection_ref.first->sendData(client_socket, static_cast<void *>(&packet.header), sizeof(packet.header))) < 0) {
+        close (client_socket);
         return -1;
+    }
 
 
     //read command respons from remote

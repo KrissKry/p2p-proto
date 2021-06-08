@@ -12,6 +12,7 @@
 
 #include "Constants.h"
 #include "Resource.h"
+#include "RandomGenerator.h"
 
 class TCPConnector {
 
@@ -55,6 +56,7 @@ class TCPConnector {
         const char* address;
         sockaddr_in addr;
 
+        RandomGenerator rg;
         void printError() {
             std::cout << "[ERR] " << strerror(errno) << "\n";
         }

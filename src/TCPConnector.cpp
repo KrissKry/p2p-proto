@@ -89,6 +89,11 @@ int TCPConnector::sendData(int sockfd, void *ptr, unsigned long long data_size) 
         }
 
         data_ptr = static_cast<char*>(data_ptr) + bytes_sent;
+
+        if ( rg.transmissionFailure() ) {
+            std::cout << "[ERR] Simulated transmission error\n";
+            return -1;
+        }
     }
 
 
