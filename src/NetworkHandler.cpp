@@ -13,12 +13,10 @@ int NetworkHandler::runTCPServer(int server_index)
         {
             //new thread to handle incoming connection without blocking the rest of the program 
             auto ptr = std::make_shared<std::thread>([this, fd_sock] { handleTCPServerThread(fd_sock); });
+            ptr->detach();
             network_threads.push_back(std::move(ptr));
         }
     }
-
-    for (auto &t : network_threads)
-        t->join();
 
     network_threads.clear();
     return 0;
