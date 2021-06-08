@@ -32,6 +32,12 @@ public:
 				return res.header;
 		}
 
+        for (auto &it : NetFileList)
+        {
+            if (strcmp(it.second.name, name) == 0)
+                return res.header;
+        }
+
 		std::ifstream file;
 		file.open(path);
 		if (file.is_open())
