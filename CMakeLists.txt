@@ -18,4 +18,5 @@ add_executable(protocole
     src/UI.cpp
     src/TCPConnector.cpp
     src/NetworkHandler.cpp
+    src/UDPClient.cpp
     )
