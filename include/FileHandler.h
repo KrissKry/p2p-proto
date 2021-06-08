@@ -110,6 +110,7 @@ public:
         {
             std::unique_lock<std::mutex> lock(net_tx);
             NetFileList.emplace_back(ip, resource.header);
+            
         }
 		return 0;
 	}
@@ -219,6 +220,7 @@ public:
                 }
             }
             NetFileList.emplace_back(ip, header);
+            std::cout << "[I] New file in network: " << header.name << "\n\n";
         }
 		return 0;
 	}

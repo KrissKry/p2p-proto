@@ -110,7 +110,7 @@ void Supervisor::udpQueueListener()
                 std::cout << "[DEBUG] SV:: udpQueueListener:switch create" << "\n";
                 
             handleCreate(message.second.header, message.first);
-            std::cout << "[I] New file in network: " << message.second.header.name << "\n\n";
+            
             break;
         case Commands::DELETE:
             handleDelete(message.second.header, message.first);
