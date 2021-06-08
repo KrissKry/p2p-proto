@@ -82,6 +82,9 @@ void Supervisor::tcpQueueListener()
         case Commands::UPLOAD:
             handleUpload(res);
             break;
+        case Commands::NOT_FOUND:
+            handleNotFound(message.first, res.header);
+            break;
         default:
             break;
         }
@@ -176,6 +179,16 @@ void Supervisor::sendUpload(int fd, const Resource &res)
     tcp_downflow.push(message);
 }
 
+void Supervisor::sendNotFound(int fd, const Resource &res)
+{
+    ProtoPacket protoPacket;
+    protoPacket.command = Commands::NOT_FOUND;
+    protoPacket.header = res.header;
+    protoPacket.data = res.data;
+    const std::pair message(fd, protoPacket);
+    tcp_downflow.push(message);
+}
+
 void Supervisor::handleGetInfo()
 {
     std::vector<Resource> files = fileHandler->getOwnFileList();
@@ -229,7 +242,15 @@ void Supervisor::handleDownload(int fd, ResourceHeader resHeader)
         if (DEBUG_LOG)
             std::cout << "[DEBUG] SV:: Res.header not empty\n";
         sendUpload(fd, res);
+    } else {
+        sendNotFound(fd, res);
     }
+}
+
+void Supervisor::handleNotFound(int fd, ResourceHeader resHeader)
+{
+    std::string senderIp = networkHandler->getIPFromSocket(fd);
+//    fileHandler->deleteFromNetList(resHeader, senderIp);
 }
 
 int Supervisor::createFile(const std::string &path, const std::string &name)
