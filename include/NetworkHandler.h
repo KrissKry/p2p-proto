@@ -21,13 +21,13 @@ public:
         SyncedDeque<std::pair<int, ProtoPacket>> &tcp_up,
         SyncedDeque<std::pair<int, ProtoPacket>> &tcp_down,
         SyncedDeque<std::pair<struct in_addr, ProtoPacket>> &udp_up,
-        SyncedDeque<ProtoPacket> &udp_down) 
-        : 
-            tcp_upflow(tcp_up),
-            tcp_downflow(tcp_down),
-            udp_upflow(udp_up),
-            udp_downflow(udp_down)
-    {}
+        SyncedDeque<ProtoPacket> &udp_down)
+        : tcp_upflow(tcp_up),
+          tcp_downflow(tcp_down),
+          udp_upflow(udp_up),
+          udp_downflow(udp_down)
+    {
+    }
     ~NetworkHandler() {}
 
     /*
@@ -37,16 +37,13 @@ public:
     */
     int runTCPServer(int server_index);
 
-
     void udpServerRun(std::atomic_bool &stop) { udpClient.server(udp_upflow, stop); }
-
 
     /*
     *   Handles incoming TCP connection on a separate thread
     *   @return 0 on successful conversation with some client, -1 on error
     */
     int handleTCPServerThread(int socket);
-
 
     void udpDownflowQueueListener(std::atomic_bool &stop);
 
@@ -69,7 +66,6 @@ public:
     *   @return number of sockets closed
     */
     int closeAllSockets();
-
 
 private:
     std::deque<std::shared_ptr<std::thread>> network_threads;
@@ -97,7 +93,6 @@ private:
     *   @return file descriptor id on success, -1 on error 
     */
     int openNewSocket();
-
 };
 
 #endif
