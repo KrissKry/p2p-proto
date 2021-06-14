@@ -223,13 +223,14 @@ public:
             for (auto &it : NetFileList)
             {
                 if (strcmp(it.second.name, header.name) == 0 && (it.first.s_addr == ip.s_addr))
-                {
-                    if (INFO_LOG)
-                        std::cout << "FH:: " << header.name << " || " << inet_ntoa(it.first) << " || " << inet_ntoa(ip)
-                                  << "\n";
+                {   
                     return -1;
                 }
             }
+            // name || source ip || our ip
+
+            if (INFO_LOG) std::cout << "[I] FH:: " << header.name << " || " << header.uuid << " || " << inet_ntoa(ip) << "\n";
+            
             NetFileList.emplace_back(ip, header);
             std::cout << "[I] New file in network: " << header.name << "\n\n";
         }
@@ -251,7 +252,7 @@ public:
     void showOwnFiles()
     {
         if (INFO_LOG)
-            std::cout << "FH:: __NAME__\n";
+            std::cout << "[I] FH:: __NAME__\n";
         std::vector<Resource>::iterator it;
         {
             std::unique_lock<std::mutex> lock(own_tx);

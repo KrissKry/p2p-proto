@@ -48,7 +48,7 @@ bool UI::parseCommand()
         result = supervisor->downloadFile(tokenList[1]);
         if (result == 0)
         {
-            std::string output = "\n>>> Finished downloading " + tokenList[1] + "\n";
+            std::string output = "\n>>> Beginning download of " + tokenList[1] + "\n";
             safeOutput(output);
         }
         else
